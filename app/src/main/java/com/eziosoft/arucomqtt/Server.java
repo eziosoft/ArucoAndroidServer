@@ -73,13 +73,17 @@ public class Server {
 
                     while (isRunning) {
                         if (inputStream.available() > 0) {
-                            while (inputStream.available() > 0) {
-                                inputStream.read();
-                            }
-                            synchronized (message) {
-                                if (newMessage) {
-                                    printStream.print(message);
-                                    newMessage = false;
+//                            while (inputStream.available() > 0) {
+//                                inputStream.read();
+//                            }
+
+                            int b = inputStream.read();
+                            if (b == 'g') {
+                                synchronized (message) {
+                                    if (newMessage) {
+                                        printStream.print(message);
+                                        newMessage = false;
+                                    }
                                 }
                             }
                         }
