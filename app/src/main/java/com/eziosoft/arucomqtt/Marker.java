@@ -19,6 +19,7 @@ class Marker {
 
     Marker(Mat corners, int ID) {
         this.ID = ID;
+        center = getMarkerCenter(corners);
         heading = getMarkerHeading(corners);
         for (int i = 0; i < 4; i++) {
             this.markerCorners[i] = new Point(corners.get(0, i)[0], corners.get(0, i)[1]);
@@ -26,6 +27,10 @@ class Marker {
         this.size = (int) Math.sqrt(Math.pow(markerCorners[0].x - markerCorners[1].x, 2) + Math.pow(markerCorners[0].y - markerCorners[1].y, 2));
     }
 
+    private double getMarkerHeading(Mat corners) {
+        Point up = getMarkerUp(corners);
+        return Math.atan2((up.x - center.x), (up.y - center.y));
+    }
 
     private Point getMarkerCenter(Mat corners) {
         double[] c = corners.get(0, 0);
@@ -47,12 +52,6 @@ class Marker {
             y += corners.get(0, i)[1];
         }
         return new Point(x / 2, y / 2);
-    }
-
-    private double getMarkerHeading(Mat corners) {
-        Point up = getMarkerUp(corners);
-        center = getMarkerCenter(corners);
-        return Math.atan2((up.x - center.x), (up.y - center.y));
     }
 
 
