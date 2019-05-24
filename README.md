@@ -1,5 +1,6 @@
 "# ArucoAndroidServer" 
 
+![screenshot](screenshot.jpg)
 
 Response from server
 ```
