@@ -18,6 +18,8 @@
 package com.eziosoft.arucomqtt;
 
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -25,6 +27,8 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.google.gson.Gson;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -77,7 +81,11 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         public void onManagerConnected(int status) {
             if (status == LoaderCallbackInterface.SUCCESS) {
                 Log.i(TAG, "OpenCV loaded successfully");
-                mOpenCvCameraView.enableView();
+                if (checkCameraPermission()) {
+                    mOpenCvCameraView.enableView();
+                } else {
+                    Toast.makeText(MainActivity.this, "Camera permission is needed", Toast.LENGTH_SHORT).show();
+                }
             } else {
                 super.onManagerConnected(status);
             }
@@ -100,6 +108,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         final TextView tv = findViewById(R.id.textView);
         tv.setText(String.format("%s:%s", getIPAddress(true), String.valueOf(serverSocket.getServerSocketPort())));
+
+
     }
 
 
@@ -199,5 +209,14 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     public void onCameraViewStopped() {
     }
 
+
+    private boolean checkCameraPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 1234);
+        } else {
+            return true;
+        }
+        return false;
+    }
 
 }
