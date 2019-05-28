@@ -1,7 +1,9 @@
-"# ArucoAndroidServer" 
+ArucoAndroidServer
+==================
 
 ![screenshot](screenshot.jpg)
 
+The servers sits on port 5000. You need to send 'g' to get responce.
 Response from server
 ```
 {
