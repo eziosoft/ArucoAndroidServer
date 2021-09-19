@@ -14,70 +14,81 @@
  *     You should have received a copy of the GNU General Public License
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
+package com.eziosoft.arucomqtt
 
-package com.eziosoft.arucomqtt;
+import org.opencv.core.Mat
+import org.opencv.core.Point
+import org.opencv.core.Scalar
+import org.opencv.imgproc.Imgproc
+import kotlin.math.atan2
+import kotlin.math.pow
+import kotlin.math.sqrt
 
+internal class Marker(corners: Mat, private val ID: Int) {
+    private val center: Point
+    private val heading: Double
+    private val size: Int
+    private val markerCorners = arrayOfNulls<Point>(4)
 
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
+    @Transient
+    private val c1 = Scalar(255.0, 100.0, 0.0)
 
-import static org.opencv.imgproc.Imgproc.*;
+    @Transient
+    private val c2 = Scalar(255.0, 0.0, 255.0)
 
-class Marker {
-    private Point center;
-    private double heading;
-    private int ID;
-    private int size;
-    private Point[] markerCorners = new Point[4];
+    private fun getMarkerHeading(corners: Mat): Double {
+        val up = getMarkerUp(corners)
+        return atan2(up.x - center.x, up.y - center.y)
+    }
 
-    transient private final Scalar c1 = new Scalar(255, 100, 0);
-    transient private final Scalar c2 = new Scalar(255, 0, 255);
-
-    Marker(Mat corners, int ID) {
-        this.ID = ID;
-        center = getMarkerCenter(corners);
-        heading = getMarkerHeading(corners);
-        for (int i = 0; i < 4; i++) {
-            this.markerCorners[i] = new Point(corners.get(0, i)[0], corners.get(0, i)[1]);
+    private fun getMarkerCenter(corners: Mat): Point {
+        val c = corners[0, 0]
+        var x = 0.0
+        var y = 0.0
+        for (i in 0..3) {
+            x += corners[0, i][0]
+            y += corners[0, i][1]
         }
-        this.size = (int) Math.sqrt(Math.pow(markerCorners[0].x - markerCorners[1].x, 2) + Math.pow(markerCorners[0].y - markerCorners[1].y, 2));
+        return Point(x / 4, y / 4)
     }
 
-    private double getMarkerHeading(Mat corners) {
-        Point up = getMarkerUp(corners);
-        return Math.atan2((up.x - center.x), (up.y - center.y));
-    }
-
-    private Point getMarkerCenter(Mat corners) {
-        double[] c = corners.get(0, 0);
-        double x = 0;
-        double y = 0;
-        for (int i = 0; i < 4; i++) {
-            x += corners.get(0, i)[0];
-            y += corners.get(0, i)[1];
+    private fun getMarkerUp(corners: Mat): Point {
+        val c = corners[0, 0]
+        var x = 0.0
+        var y = 0.0
+        for (i in 0..1) {
+            x += corners[0, i][0]
+            y += corners[0, i][1]
         }
-        return new Point(x / 4, y / 4);
+        return Point(x / 2, y / 2)
     }
 
-    private Point getMarkerUp(Mat corners) {
-        double[] c = corners.get(0, 0);
-        double x = 0;
-        double y = 0;
-        for (int i = 0; i < 2; i++) {
-            x += corners.get(0, i)[0];
-            y += corners.get(0, i)[1];
+    fun draw(frame: Mat?) {
+        Imgproc.line(frame, markerCorners[0], markerCorners[1], c1, 3)
+        Imgproc.line(frame, markerCorners[1], markerCorners[2], c1, 3)
+        Imgproc.line(frame, markerCorners[2], markerCorners[3], c1, 3)
+        Imgproc.line(frame, markerCorners[3], markerCorners[0], c1, 3)
+        Imgproc.line(
+            frame,
+            center,
+            Point(
+                center.x + size / 2f * Math.sin(heading),
+                center.y + size / 2f * Math.cos(heading)
+            ),
+            c2,
+            5
+        )
+        Imgproc.putText(frame, ID.toString(), center, 1, 1.0, c1)
+    }
+
+    init {
+        center = getMarkerCenter(corners)
+        heading = getMarkerHeading(corners)
+        for (i in 0..3) {
+            markerCorners[i] = Point(corners[0, i][0], corners[0, i][1])
         }
-        return new Point(x / 2, y / 2);
-    }
-
-
-    void draw(Mat frame) {
-        line(frame, markerCorners[0], markerCorners[1], c1, 3);
-        line(frame, markerCorners[1], markerCorners[2], c1, 3);
-        line(frame, markerCorners[2], markerCorners[3], c1, 3);
-        line(frame, markerCorners[3], markerCorners[0], c1, 3);
-        line(frame, center, new Point(center.x + size / 2f * Math.sin(heading), center.y + size / 2f * Math.cos(heading)), c2, 5);
-        putText(frame, String.valueOf(ID), center, 1, 1, c1);
+        size = sqrt(
+            (markerCorners[0]!!.x - markerCorners[1]!!.x).pow(2.0) + (markerCorners[0]!!.y - markerCorners[1]!!.y).pow(2.0)
+        ).toInt()
     }
 }
