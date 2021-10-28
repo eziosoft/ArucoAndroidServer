@@ -55,17 +55,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val allCorners: MutableList<Mat> = ArrayList()
     private val rejected: MutableList<Mat> = ArrayList()
     private val markersList: MutableList<Marker> = ArrayList()
-    private val gson = Gson()
-    private var json = "{}"
-    private val serverSocket = Server() {
-        runOnUiThread {
-            Toast.makeText(
-                this@MainActivity,
-                "client connected",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
+
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
             if (status == SUCCESS) {
@@ -85,20 +75,17 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
     }
 
-    /**
-     * Called when the activity is first created.
-     */
+
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_main)
         mOpenCvCameraView = findViewById(R.id.camera_view)
         mOpenCvCameraView.setMaxFrameSize(800, 600)
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE)
+        mOpenCvCameraView.visibility = SurfaceView.VISIBLE
         mOpenCvCameraView.setCvCameraViewListener(this)
         val tv = findViewById<TextView>(R.id.textView)
-        tv.text =
-            String.format("%s:%s", getIPAddress(true), serverSocket.serverSocketPort.toString())
+
     }
 
     public override fun onResume() {
@@ -110,13 +97,11 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             Log.d(TAG, "OpenCV library found inside package. Using it!")
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
         }
-        serverSocket.start()
     }
 
     public override fun onPause() {
         super.onPause()
         disableCamera()
-        serverSocket.stop()
     }
 
     public override fun onDestroy() {
@@ -143,43 +128,12 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 markersList.add(marker)
             }
         }
-        json = gson.toJson(markersList)
-        serverSocket.setMessage("{\"aruco\":$json}\n")
         return frame
     }
 
-    private fun getIPAddress(useIPv4: Boolean): String {
-        try {
-            val interfaces: List<NetworkInterface> =
-                Collections.list(NetworkInterface.getNetworkInterfaces())
-            for (intf in interfaces) {
-                val addrs: List<InetAddress> = Collections.list(intf.inetAddresses)
-                for (addr in addrs) {
-                    if (!addr.isLoopbackAddress) {
-                        val sAddr = addr.hostAddress
-                        //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
-                        val isIPv4 = sAddr.indexOf(':') < 0
-                        if (useIPv4) {
-                            if (isIPv4) return sAddr
-                        } else {
-                            if (!isIPv4) {
-                                val delim = sAddr.indexOf('%') // drop ip6 zone suffix
-                                return if (delim < 0) sAddr.toUpperCase() else sAddr.substring(
-                                    0,
-                                    delim
-                                ).toUpperCase()
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (ignored: Exception) {
-        } // for now eat exceptions
-        return ""
-    }
 
-    fun disableCamera() {
-        if (mOpenCvCameraView != null) mOpenCvCameraView!!.disableView()
+    private fun disableCamera() {
+        mOpenCvCameraView.disableView()
     }
 
     override fun onCameraViewStarted(width: Int, height: Int) {}

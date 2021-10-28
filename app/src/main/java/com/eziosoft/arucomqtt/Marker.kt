@@ -24,7 +24,7 @@ import kotlin.math.atan2
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-internal class Marker(corners: Mat, private val ID: Int) {
+data class Marker(val corners: Mat,  val ID: Int) {
     private val center: Point
     private val heading: Double
     private val size: Int
