@@ -7,7 +7,7 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 31
     defaultConfig {
-        applicationId "com.eziosoft.arucomqtt"
+        applicationId "com.eziosoft.positioningsystem"
         minSdkVersion 21
         targetSdkVersion 31
         versionCode 1
@@ -40,5 +40,4 @@ dependencies {
     // opencv 3.4.4 with contribution packages
     implementation 'com.quickbirdstudios:opencv:3.4.4-contrib'
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'com.koushikdutta.async:androidasync:2.2.1'
 }

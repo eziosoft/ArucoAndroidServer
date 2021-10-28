@@ -24,11 +24,24 @@ import kotlin.math.atan2
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-data class Marker(val corners: Mat,  val ID: Int) {
+data class Marker(val corners: Mat, val ID: Int) {
     private val center: Point
     private val heading: Double
     private val size: Int
     private val markerCorners = arrayOfNulls<Point>(4)
+
+
+    init {
+        center = getMarkerCenter(corners)
+        heading = getMarkerHeading(corners)
+        for (i in 0..3) {
+            markerCorners[i] = Point(corners[0, i][0], corners[0, i][1])
+        }
+        size = sqrt(
+            (markerCorners[0]!!.x - markerCorners[1]!!.x).pow(2.0) +
+                    (markerCorners[0]!!.y - markerCorners[1]!!.y).pow(2.0)
+        ).toInt()
+    }
 
     @Transient
     private val c1 = Scalar(255.0, 100.0, 0.0)
@@ -81,14 +94,5 @@ data class Marker(val corners: Mat,  val ID: Int) {
         Imgproc.putText(frame, ID.toString(), center, 1, 1.0, c1)
     }
 
-    init {
-        center = getMarkerCenter(corners)
-        heading = getMarkerHeading(corners)
-        for (i in 0..3) {
-            markerCorners[i] = Point(corners[0, i][0], corners[0, i][1])
-        }
-        size = sqrt(
-            (markerCorners[0]!!.x - markerCorners[1]!!.x).pow(2.0) + (markerCorners[0]!!.y - markerCorners[1]!!.y).pow(2.0)
-        ).toInt()
-    }
+
 }

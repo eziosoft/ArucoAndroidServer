@@ -23,14 +23,11 @@ import org.opencv.android.CameraBridgeViewBase
 import org.opencv.aruco.Aruco
 import org.opencv.aruco.DetectorParameters
 import org.opencv.core.Mat
-import com.google.gson.Gson
 import android.widget.Toast
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.LoaderCallbackInterface
-import com.eziosoft.arucomqtt.MainActivity
 import android.os.Bundle
 import android.view.WindowManager
-import com.eziosoft.arucomqtt.R
 import android.view.SurfaceView
 import android.widget.TextView
 import org.opencv.android.OpenCVLoader
@@ -39,14 +36,17 @@ import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import java.lang.Exception
-import java.net.InetAddress
-import java.net.NetworkInterface
+import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import java.util.*
 
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
-    private lateinit var mOpenCvCameraView: CameraBridgeViewBase
-    private val dictionary = Aruco.getPredefinedDictionary(Aruco.DICT_ARUCO_ORIGINAL)
+    private lateinit var binding: ActivityMainBinding
+
+    private val DICTIONARY = Aruco.getPredefinedDictionary(Aruco.DICT_4X4_100)
+    private val CAMERA_WIDTH = 800
+    private val CAMERA_HEIGH = 600
+
+
     private val detectorParameters = DetectorParameters.create()
     private var frame = Mat()
     private val rgb = Mat()
@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             if (status == SUCCESS) {
                 Log.i(TAG, "OpenCV loaded successfully")
                 if (checkCameraPermission()) {
-                    mOpenCvCameraView!!.enableView()
+                    binding.cameraView.enableView()
                 } else {
                     Toast.makeText(
                         this@MainActivity,
@@ -79,13 +79,15 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        setContentView(R.layout.activity_main)
-        mOpenCvCameraView = findViewById(R.id.camera_view)
-        mOpenCvCameraView.setMaxFrameSize(800, 600)
-        mOpenCvCameraView.visibility = SurfaceView.VISIBLE
-        mOpenCvCameraView.setCvCameraViewListener(this)
-        val tv = findViewById<TextView>(R.id.textView)
 
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        with(binding) {
+            cameraView.setMaxFrameSize(CAMERA_WIDTH, CAMERA_HEIGH)
+            cameraView.visibility = SurfaceView.VISIBLE
+            cameraView.setCvCameraViewListener(this@MainActivity)
+        }
     }
 
     public override fun onResume() {
@@ -112,10 +114,12 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
         frame = inputFrame.rgba()
         gray = inputFrame.gray()
+
         allCorners.clear()
         rejected.clear()
         markersList.clear()
-        Aruco.detectMarkers(gray, dictionary, allCorners, ids, detectorParameters, rejected)
+
+        Aruco.detectMarkers(gray, DICTIONARY, allCorners, ids, detectorParameters, rejected)
         if (!ids.empty()) {
 //            cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR);
 //            Aruco.drawDetectedMarkers(rgb, allCorners, ids);
@@ -133,7 +137,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
 
     private fun disableCamera() {
-        mOpenCvCameraView.disableView()
+        binding.cameraView.disableView()
     }
 
     override fun onCameraViewStarted(width: Int, height: Int) {}
