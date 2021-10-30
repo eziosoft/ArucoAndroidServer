@@ -37,6 +37,9 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
+import org.opencv.core.CvType
+import org.opencv.imgproc.Imgproc
+import org.opencv.imgproc.Imgproc.cvtColor
 import java.util.*
 
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
@@ -46,10 +49,37 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val CAMERA_WIDTH = 800
     private val CAMERA_HEIGH = 600
 
+    private val MARKER_LENGTH = 10F
+    private val CAMERA_MATRIX: Mat = Mat(3, 3, CvType.CV_32F)
+    private val CAMERA_DISTORTION: Mat = Mat(1, 5, CvType.CV_32F)
+
+    init {
+//        [467.74270306499267, 0.0, 320.5,
+//        0.0, 467.74270306499267, 240.5,
+//        0.0, 0.0, 1.0]
+        CAMERA_MATRIX.put(0, 0, 467.74270306499267)
+        CAMERA_MATRIX.put(0, 1, 0.0)
+        CAMERA_MATRIX.put(0, 2, 320.5)
+
+        CAMERA_MATRIX.put(1, 0, 0.0)
+        CAMERA_MATRIX.put(1, 1, 467.74270306499267)
+        CAMERA_MATRIX.put(1, 2, 240.5)
+
+        CAMERA_MATRIX.put(2, 0, 0.0)
+        CAMERA_MATRIX.put(2, 1, 0.0)
+        CAMERA_MATRIX.put(2, 2, 1.0)
+
+        CAMERA_DISTORTION.put(0, 0, 0.0)
+        CAMERA_DISTORTION.put(0, 1, 0.0)
+        CAMERA_DISTORTION.put(0, 2, 0.0)
+        CAMERA_DISTORTION.put(0, 3, 0.0)
+        CAMERA_DISTORTION.put(0, 4, 0.0)
+    }
+
 
     private val detectorParameters = DetectorParameters.create()
     private var frame = Mat()
-    private val rgb = Mat()
+    private var rgb = Mat()
     private var gray = Mat()
     private val ids = Mat()
     private val allCorners: MutableList<Mat> = ArrayList()
@@ -114,12 +144,24 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
         frame = inputFrame.rgba()
         gray = inputFrame.gray()
+        cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR);
 
         allCorners.clear()
         rejected.clear()
         markersList.clear()
 
-        Aruco.detectMarkers(gray, DICTIONARY, allCorners, ids, detectorParameters, rejected)
+
+        Aruco.detectMarkers(
+            gray,
+            DICTIONARY,
+            allCorners,
+            ids,
+            detectorParameters,
+            rejected,
+            CAMERA_MATRIX,
+            CAMERA_DISTORTION
+        )
+
         if (!ids.empty()) {
 //            cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR);
 //            Aruco.drawDetectedMarkers(rgb, allCorners, ids);
@@ -128,10 +170,29 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 val markerCorners = allCorners[i]
                 val ID = ids[i, 0][0].toInt()
                 val marker = Marker(markerCorners, ID)
-                marker.draw(frame)
+                marker.draw(rgb)
                 markersList.add(marker)
+
+            }
+
+
+            markersList.filter { it.ID == 0 }.forEach {
+                var rvec = Mat()
+                var tvecs = Mat()
+
+                Aruco.estimatePoseSingleMarkers(
+                    mutableListOf(it.corners),
+                    MARKER_LENGTH,
+                    CAMERA_MATRIX,
+                    CAMERA_DISTORTION,
+                    rvec,
+                    tvecs
+                )
+                Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvecs, MARKER_LENGTH)
             }
         }
+
+        cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA);
         return frame
     }
 
