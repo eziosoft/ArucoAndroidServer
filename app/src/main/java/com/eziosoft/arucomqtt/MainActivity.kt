@@ -19,7 +19,6 @@ package com.eziosoft.arucomqtt
 import android.Manifest
 import androidx.appcompat.app.AppCompatActivity
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2
-import org.opencv.android.CameraBridgeViewBase
 import org.opencv.aruco.Aruco
 import org.opencv.aruco.DetectorParameters
 import org.opencv.core.Mat
@@ -29,7 +28,6 @@ import org.opencv.android.LoaderCallbackInterface
 import android.os.Bundle
 import android.view.WindowManager
 import android.view.SurfaceView
-import android.widget.TextView
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame
 import androidx.core.content.ContextCompat
@@ -163,39 +161,56 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         )
 
         if (!ids.empty()) {
-//            cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR);
-//            Aruco.drawDetectedMarkers(rgb, allCorners, ids);
-//            cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA);
-            for (i in 0 until ids.rows()) {
+            for (i in 0 until ids.rows()) { //for each marker
                 val markerCorners = allCorners[i]
                 val ID = ids[i, 0][0].toInt()
-                val marker = Marker(markerCorners, ID)
+
+                val rvec = Mat() //attitude of the marker respect to camera frame
+                val tvec = Mat() //position of the marker in camera frame
+
+                Aruco.estimatePoseSingleMarkers(
+                    mutableListOf(markerCorners),
+                    MARKER_LENGTH,
+                    CAMERA_MATRIX,
+                    CAMERA_DISTORTION,
+                    rvec,
+                    tvec
+                )
+                Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
+
+
+                val marker = Marker(
+                    markerCorners,
+                    ID,
+                    X = tvec[0, 0][0],
+                    Y = tvec[0, 0][1],
+                    Z = tvec[0, 0][2]
+                )
+
+
+
                 marker.draw(rgb)
                 markersList.add(marker)
 
             }
 
-
-            markersList.filter { it.ID == 0 }.forEach {
-                var rvec = Mat()
-                var tvecs = Mat()
-
-                Aruco.estimatePoseSingleMarkers(
-                    mutableListOf(it.corners),
-                    MARKER_LENGTH,
-                    CAMERA_MATRIX,
-                    CAMERA_DISTORTION,
-                    rvec,
-                    tvecs
-                )
-                Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvecs, MARKER_LENGTH)
-            }
         }
 
         cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA);
+
+
+        runOnUiThread { showInfo() }
         return frame
     }
 
+
+    private fun showInfo() {
+        var s = ""
+        markersList.forEach {
+            s += it.toString() + "\n"
+        }
+        binding.textView.text = s
+    }
 
     private fun disableCamera() {
         binding.cameraView.disableView()
@@ -220,3 +235,5 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         private const val TAG = "ARUCO"
     }
 }
+
+

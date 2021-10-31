@@ -24,11 +24,12 @@ import kotlin.math.atan2
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-data class Marker(val corners: Mat, val ID: Int) {
+data class Marker(val corners: Mat, val ID: Int, val X: Double, val Y: Double, val Z: Double) {
     private val center: Point
     private val heading: Double
     private val size: Int
     private val markerCorners = arrayOfNulls<Point>(4)
+
 
 
     init {
@@ -43,6 +44,10 @@ data class Marker(val corners: Mat, val ID: Int) {
         ).toInt()
     }
 
+
+    override fun toString():String{
+        return "$ID ${X.round(2)} ${Y.round(2)} ${Z.round(2)}"
+    }
     @Transient
     private val c1 = Scalar(255.0, 100.0, 0.0)
 
