@@ -35,6 +35,9 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.opencv.core.CvType
 import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.cvtColor
@@ -165,8 +168,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 val markerCorners = allCorners[i]
                 val ID = ids[i, 0][0].toInt()
 
-                val rvec = Mat() //attitude of the marker respect to camera frame
-                val tvec = Mat() //position of the marker in camera frame
+                val rvec =
+                    Mat(3, 1, CvType.CV_64FC1) //attitude of the marker respect to camera frame
+                val tvec = Mat(3, 1, CvType.CV_64FC1) //position of the marker in camera frame
 
                 Aruco.estimatePoseSingleMarkers(
                     mutableListOf(markerCorners),
@@ -199,12 +203,16 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA);
 
 
-        runOnUiThread { showInfo() }
+//        runOnUiThread { showInfo() }
+
+        CoroutineScope(Dispatchers.Main).launch {
+            showInfo()
+        }
         return frame
     }
 
 
-    private fun showInfo() {
+    private suspend fun showInfo() {
         var s = ""
         markersList.forEach {
             s += it.toString() + "\n"
