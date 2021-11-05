@@ -20,9 +20,7 @@ import org.opencv.core.Mat
 import org.opencv.core.Point
 import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
-import kotlin.math.atan2
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
 data class Marker(val corners: Mat, val ID: Int, val X: Double, val Y: Double, val Z: Double) {
     private val center: Point
@@ -46,7 +44,7 @@ data class Marker(val corners: Mat, val ID: Int, val X: Double, val Y: Double, v
 
 
     override fun toString():String{
-        return "$ID ${X.round(2)} ${Y.round(2)} ${Z.round(2)}"
+        return "$ID-${X.round(2)} ${Y.round(2)} ${Z.round(2)}"
     }
     @Transient
     private val c1 = Scalar(255.0, 100.0, 0.0)
@@ -60,7 +58,6 @@ data class Marker(val corners: Mat, val ID: Int, val X: Double, val Y: Double, v
     }
 
     private fun getMarkerCenter(corners: Mat): Point {
-        val c = corners[0, 0]
         var x = 0.0
         var y = 0.0
         for (i in 0..3) {
@@ -71,7 +68,6 @@ data class Marker(val corners: Mat, val ID: Int, val X: Double, val Y: Double, v
     }
 
     private fun getMarkerUp(corners: Mat): Point {
-        val c = corners[0, 0]
         var x = 0.0
         var y = 0.0
         for (i in 0..1) {
@@ -90,13 +86,13 @@ data class Marker(val corners: Mat, val ID: Int, val X: Double, val Y: Double, v
             frame,
             center,
             Point(
-                center.x + size / 2f * Math.sin(heading),
-                center.y + size / 2f * Math.cos(heading)
+                center.x + size / 2f * sin(heading),
+                center.y + size / 2f * cos(heading)
             ),
             c2,
             5
         )
-        Imgproc.putText(frame, ID.toString(), center, 1, 1.0, c1)
+        Imgproc.putText(frame, toString(), center, 1, 1.0, c1)
     }
 
 

@@ -203,7 +203,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA);
 
 
-//        runOnUiThread { showInfo() }
+
 
         CoroutineScope(Dispatchers.Main).launch {
             showInfo()
