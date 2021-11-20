@@ -17,6 +17,8 @@
 
 package com.eziosoft.arucomqtt;
 
+import android.util.Log;
+
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -27,26 +29,19 @@ import org.opencv.core.Scalar;
 public class Other {
 
     static Point3d cameraLocation(Mat rvec, Mat tvec) {
-//        final QuaternionHelper q = new QuaternionHelper();
+        Mat R_ct = new Mat(3, 3, CvType.CV_32FC1);
+        Calib3d.Rodrigues(rvec.row(0), R_ct);
+        Mat R_tc = R_ct.t();
+        Core.multiply(R_tc, new Scalar(-1), R_tc);
+        Mat pos_camera =new Mat(3, 3, CvType.CV_32FC1);
+//        Core.gemm(R_tc.inv(), tvec.t(), 1, new Mat(), 0, pos_camera, 0);
+        Core.multiply(R_tc,tvec.t(),pos_camera);
 
-        Mat R = new Mat(3, 3, CvType.CV_32FC1);
-        Calib3d.Rodrigues(rvec, R);
-        // see publishers before for documentation
-        final Mat tvec_map_cam = new MatOfDouble(1.0, 1.0, 1.0);
-        R = R.t();
-        final double bankX = Math.atan2(-R.get(1, 2)[0], R.get(1, 1)[0]);
-        final double headingY = Math.atan2(-R.get(2, 0)[0], R.get(0, 0)[0]);
-        final double attitudeZ = Math.asin(R.get(1, 0)[0]);
-//        q.setFromEuler(bankX, headingY, attitudeZ);
-        Core.multiply(R, new Scalar(-1), R);
-        Core.gemm(R, tvec, 1, new Mat(), 0, tvec_map_cam, 0);
-        R.release();
-//        final org.ros.rosjava_geometry.Quaternion rotation = new org.ros.rosjava_geometry.Quaternion(
-//                q.getX(), q.getY(), q.getZ(), q.getW());
-        final double x = tvec_map_cam.get(0, 0)[0];
-        final double y = tvec_map_cam.get(1, 0)[0];
-        final double z = tvec_map_cam.get(2, 0)[0];
+        Log.d("aaaa", "cameraLocation: " + pos_camera.toString());
+        final double x = pos_camera.get(0,0)[0];
+//        final double y = pos_camera.get(1, 0)[0];
+//        final double z = pos_camera.get(2, 0)[0];
 
-        return new Point3d(x, y, z, "cam");
+        return new Point3d(0,0,0, "cam");
     }
 }

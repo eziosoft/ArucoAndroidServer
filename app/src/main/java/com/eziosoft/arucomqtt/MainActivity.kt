@@ -179,9 +179,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 val markerCorners = allCorners[i]
                 val ID = ids[i, 0][0].toInt()
 
-                val rvec =
-                    Mat(3, 1, CvType.CV_64FC1) //attitude of the marker respect to camera frame
-                val tvec = Mat(3, 1, CvType.CV_64FC1) //position of the marker in camera frame
+                var rvec =
+                    Mat(3, 1, CV_32FC1) //attitude of the marker respect to camera frame
+                var tvec = Mat(3, 1, CV_32FC1) //position of the marker in camera frame
 
                 Aruco.estimatePoseSingleMarkers(
                     mutableListOf(markerCorners),
@@ -229,27 +229,27 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
 
-    private fun cameraLocation(rvec: Mat, tvec: Mat): Point3d {
-
-
-
-        var R = Mat(3, 3, CV_32FC1)
-        Calib3d.Rodrigues(rvec, R)
-        val tvec_map_cam: Mat = MatOfDouble(1.0, 1.0, 1.0)
-        R = R.t()
-        val bankX = Math.atan2(-R[1, 2][0], R[1, 1][0])
-        val headingY = Math.atan2(-R[2, 0][0], R[0, 0][0])
-        val attitudeZ = Math.asin(R[1, 0][0])
-
-        Core.multiply(R, Scalar(-1.0), R)
-        Core.gemm(R, tvec, 1.0, Mat(), 0.0, tvec_map_cam, 0)
-
-
-        val x = tvec_map_cam[0, 0][0]
-        val y = tvec_map_cam[1, 0][0]
-        val z = tvec_map_cam[2, 0][0]
-
-        return Point3d(x,y,z,name="cam")
+//    private fun cameraLocation(rvec: Mat, tvec: Mat): Point3d {
+//
+//
+//
+//        var R = Mat(3, 3, CV_32FC1)
+//        Calib3d.Rodrigues(rvec, R)
+//        val tvec_map_cam: Mat = MatOfDouble(1.0, 1.0, 1.0)
+//        R = R.t()
+//        val bankX = Math.atan2(-R[1, 2][0], R[1, 1][0])
+//        val headingY = Math.atan2(-R[2, 0][0], R[0, 0][0])
+//        val attitudeZ = Math.asin(R[1, 0][0])
+//
+//        Core.multiply(R, Scalar(-1.0), R)
+//        Core.gemm(R, tvec, 1.0, Mat(), 0.0, tvec_map_cam, 0)
+//
+//
+//        val x = tvec_map_cam[0, 0][0]
+//        val y = tvec_map_cam[1, 0][0]
+//        val z = tvec_map_cam[2, 0][0]
+//
+//        return Point3d(x,y,z,name="cam")
 
 
 //        var m33 = Mat(3, 3, CV_32FC1)
@@ -285,7 +285,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 //        Calib3d.Rodrigues(rvec,dst )
 //        var extristics = Mat()
 
-    }
+//    }
 
 
 
