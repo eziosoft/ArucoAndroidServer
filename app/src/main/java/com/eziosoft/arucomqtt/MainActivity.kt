@@ -41,7 +41,10 @@ import org.opencv.core.*
 import org.opencv.core.CvType.CV_32FC1
 import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.cvtColor
+
 import java.util.*
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
@@ -84,7 +87,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val detectorParameters = DetectorParameters.create()
     private var frame = Mat()
     private var rgb = Mat()
-    private var gray = Mat()
+
+    //    private var gray = Mat()
     private val ids = Mat()
     private val allCorners: MutableList<Mat> = ArrayList()
     private val rejected: MutableList<Mat> = ArrayList()
@@ -146,8 +150,13 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
+
         frame = inputFrame.rgba()
-        gray = inputFrame.gray()
+//        gray = inputFrame.gray()
+
+//        Core.flip(frame, frame, 1) // flip front camera
+//        Core.flip(gray, gray, 1) // flip front camera
+
         cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
 
         allCorners.clear()
@@ -156,7 +165,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
 
         Aruco.detectMarkers(
-                gray,
+                rgb,
                 DICTIONARY,
                 allCorners,
                 ids,
@@ -193,30 +202,47 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                         Z = tvec[0, 0][2]
                 )
 
-                Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
-                marker.draw(rgb)
+//                Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
                 markersList.add(marker)
             }
 
 
         }
 
-        cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
+
+
+
+
+
 
 
         markersList.filter { it.ID == 0 }.map { // draw path of marker 0
-            path.add(it.getCenterInWorld(frame.width() / 2, frame.height() / 2))
+
+            var x = 1 * it.X
+            var y = -1 * it.Y
+            x *= sin(-it.heading)
+            y *= cos(-it.heading)
+
+
+            val cam = Marker(null, 255, x, -y, -1 * it.Z)
+            path.add(cam.getCenterInWorld(frame.width() / 2, frame.height() / 2))
             if (path.size > 200) {
                 path.removeAt(0)
             }
+            it.draw(rgb)
+            markersList.add(cam)
+
+
         }
 
-        drawPath(frame)
-        drawCenterLines(frame)
+        drawPath(rgb)
+        drawCenterLines(rgb)
 
         CoroutineScope(Dispatchers.Main).launch { // run in main thread
             showInfo()
         }
+
+        cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
 
         return frame
     }
