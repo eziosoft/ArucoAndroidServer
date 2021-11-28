@@ -23,38 +23,40 @@ import org.opencv.imgproc.Imgproc
 import kotlin.math.*
 
 data class Marker(val corners: Mat, val ID: Int, val X: Double, val Y: Double, val Z: Double) {
-    private val center: Point
+    val centerInPixels: Point
     private val heading: Double
     private val size: Int
-    private val markerCorners = arrayOfNulls<Point>(4)
-
+    private val markerCornersInPixels = arrayOfNulls<Point>(4)
 
 
     init {
-        center = getMarkerCenter(corners)
+        centerInPixels = getMarkerCenter(corners)
         heading = getMarkerHeading(corners)
         for (i in 0..3) {
-            markerCorners[i] = Point(corners[0, i][0], corners[0, i][1])
+            markerCornersInPixels[i] = Point(corners[0, i][0], corners[0, i][1])
         }
         size = sqrt(
-            (markerCorners[0]!!.x - markerCorners[1]!!.x).pow(2.0) +
-                    (markerCorners[0]!!.y - markerCorners[1]!!.y).pow(2.0)
+                (markerCornersInPixels[0]!!.x - markerCornersInPixels[1]!!.x).pow(2.0) +
+                        (markerCornersInPixels[0]!!.y - markerCornersInPixels[1]!!.y).pow(2.0)
         ).toInt()
     }
 
 
-    override fun toString():String{
+    override fun toString(): String {
         return "$ID-${X.round(2)} ${Y.round(2)} ${Z.round(2)}"
     }
+
     @Transient
     private val c1 = Scalar(255.0, 100.0, 0.0)
 
     @Transient
     private val c2 = Scalar(255.0, 0.0, 255.0)
 
+    fun getCenterInWorld(offsetX: Int = 0, offsetY: Int = 0) = Point(X + offsetX, Y + offsetY)
+
     private fun getMarkerHeading(corners: Mat): Double {
         val up = getMarkerUp(corners)
-        return atan2(up.x - center.x, up.y - center.y)
+        return atan2(up.x - centerInPixels.x, up.y - centerInPixels.y)
     }
 
     private fun getMarkerCenter(corners: Mat): Point {
@@ -78,21 +80,21 @@ data class Marker(val corners: Mat, val ID: Int, val X: Double, val Y: Double, v
     }
 
     fun draw(frame: Mat?) {
-        Imgproc.line(frame, markerCorners[0], markerCorners[1], c1, 3)
-        Imgproc.line(frame, markerCorners[1], markerCorners[2], c1, 3)
-        Imgproc.line(frame, markerCorners[2], markerCorners[3], c1, 3)
-        Imgproc.line(frame, markerCorners[3], markerCorners[0], c1, 3)
+        Imgproc.line(frame, markerCornersInPixels[0], markerCornersInPixels[1], c1, 3)
+        Imgproc.line(frame, markerCornersInPixels[1], markerCornersInPixels[2], c1, 3)
+        Imgproc.line(frame, markerCornersInPixels[2], markerCornersInPixels[3], c1, 3)
+        Imgproc.line(frame, markerCornersInPixels[3], markerCornersInPixels[0], c1, 3)
         Imgproc.line(
-            frame,
-            center,
-            Point(
-                center.x + size / 2f * sin(heading),
-                center.y + size / 2f * cos(heading)
-            ),
-            c2,
-            5
+                frame,
+                centerInPixels,
+                Point(
+                        centerInPixels.x + size / 2f * sin(heading),
+                        centerInPixels.y + size / 2f * cos(heading)
+                ),
+                c2,
+                5
         )
-        Imgproc.putText(frame, toString(), center, 1, 1.0, c1)
+        Imgproc.putText(frame, toString(), centerInPixels, 1, 1.0, c1)
     }
 
 

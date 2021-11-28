@@ -12,7 +12,8 @@
             android:visibility="gone"
             android:id="@+id/camera_view"
             opencv:show_fps="true"
-            opencv:camera_id="any"/>
+            opencv:camera_id="1"
+        />
     <TextView
             android:text="TextView"
             android:layout_width="wrap_content"
