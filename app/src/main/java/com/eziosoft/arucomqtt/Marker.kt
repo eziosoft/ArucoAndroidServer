@@ -51,7 +51,9 @@ data class Marker(
 
 
     override fun toString(): String {
-        return "$ID--X${X.round(2)} Y${Y.round(2)} Z${Z.round(2)} H${heading.round(2)}"
+        return "$ID--X${X.round(2)} Y${Y.round(2)} Z${Z.round(2)} H${heading.round(2)}(${
+            heading.toDegree().roundToInt()
+        })"
     }
 
 
@@ -109,3 +111,7 @@ data class Marker(
     }
 
 }
+
+fun Double.toRadian(): Double = this / 180 * Math.PI
+fun Double.toDegree(): Double = this * 180.0 / Math.PI
+fun Double.invertAngle() = (this + Math.PI) % (2 * Math.PI)

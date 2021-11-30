@@ -45,6 +45,8 @@ import org.opencv.imgproc.Imgproc.cvtColor
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.atan2
+import kotlin.math.sqrt
 
 
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
@@ -59,6 +61,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val MARKER_LENGTH = 10F
     private val CAMERA_MATRIX: Mat = Mat(3, 3, CvType.CV_32F)
     private val CAMERA_DISTORTION: Mat = Mat(1, 5, CvType.CV_32F)
+
+    var a = 0.0
 
     init {
 //        [467.74270306499267, 0.0, 320.5,
@@ -102,9 +106,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                     binding.cameraView.enableView()
                 } else {
                     Toast.makeText(
-                            this@MainActivity,
-                            "Camera permission is needed",
-                            Toast.LENGTH_SHORT
+                        this@MainActivity,
+                        "Camera permission is needed",
+                        Toast.LENGTH_SHORT
                     ).show()
                 }
             } else {
@@ -165,14 +169,14 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
 
         Aruco.detectMarkers(
-                rgb,
-                DICTIONARY,
-                allCorners,
-                ids,
-                detectorParameters,
-                rejected,
-                CAMERA_MATRIX,
-                CAMERA_DISTORTION
+            rgb,
+            DICTIONARY,
+            allCorners,
+            ids,
+            detectorParameters,
+            rejected,
+            CAMERA_MATRIX,
+            CAMERA_DISTORTION
         )
 
         if (!ids.empty()) {
@@ -186,20 +190,20 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 val tvec = Mat(3, 1, CV_32FC1) //position of the marker in camera frame
 
                 Aruco.estimatePoseSingleMarkers(
-                        mutableListOf(markerCorners),
-                        MARKER_LENGTH,
-                        CAMERA_MATRIX,
-                        CAMERA_DISTORTION,
-                        rvec,
-                        tvec
+                    mutableListOf(markerCorners),
+                    MARKER_LENGTH,
+                    CAMERA_MATRIX,
+                    CAMERA_DISTORTION,
+                    rvec,
+                    tvec
                 )
 
                 val marker = Marker(
-                        markerCorners,
-                        ID,
-                        X = tvec[0, 0][0],
-                        Y = tvec[0, 0][1],
-                        Z = tvec[0, 0][2]
+                    markerCorners,
+                    ID,
+                    X = tvec[0, 0][0],
+                    Y = tvec[0, 0][1],
+                    Z = tvec[0, 0][2]
                 )
 
 //                Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
@@ -218,13 +222,17 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
         markersList.filter { it.ID == 0 }.map { // draw path of marker 0
 
-            var x = 1 * it.X
-            var y = -1 * it.Y
-            x *= sin(-it.heading)
-            y *= cos(-it.heading)
+            var x = 10 * it.X
+            var y = 10 * it.Y
+            a += 1
 
+            var c = Cartesian(x, y)
+            var p = toPolar(c)
+            p.rotate(.00)
+            c = toCartesian(p)
 
-            val cam = Marker(null, 255, x, -y, -1 * it.Z)
+            val cam = Marker(null, 255, c.x, c.y, -it.Z)
+//            cam.heading = h
             path.add(cam.getCenterInWorld(frame.width() / 2, frame.height() / 2))
             if (path.size > 200) {
                 path.removeAt(0)
@@ -247,17 +255,51 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         return frame
     }
 
-    private fun drawPath(frame: Mat) {
-        val matOfPoint = MatOfPoint()
-        matOfPoint.fromList(path)
-        val matOfPointList = arrayListOf(matOfPoint)
+    fun toPolar(c: Cartesian): Polar {
+        val r = sqrt(c.x * c.x + c.y * c.y)
+        val theta = atan2(c.y, c.x)
+        return Polar(r, theta)
+    }
 
-        Imgproc.polylines(frame, matOfPointList, false, COLOR_RED, 2)
+    data class Polar(val r: Double, var theta: Double) {
+        fun rotate(angle: Double) {
+            theta += angle
+        }
+    }
+
+    data class Cartesian(val x: Double, val y: Double)
+
+    fun toCartesian(p: Polar): Cartesian {
+        val theta = p.theta / 180 * Math.PI
+        return Cartesian(p.r * cos(theta), p.r * sin(theta))
+    }
+
+    private fun drawPath(frame: Mat) {
+        if (!path.isEmpty()) {
+            val matOfPoint = MatOfPoint()
+            matOfPoint.fromList(path)
+            val matOfPointList = arrayListOf(matOfPoint)
+
+            Imgproc.polylines(frame, matOfPointList, false, COLOR_RED, 2)
+            Imgproc.circle(frame, path.last(), 10, COLOR_RED, 2)
+        }
     }
 
     private fun drawCenterLines(frame: Mat) {
-        Imgproc.line(frame, Point(frame.width() / 2.0, 0.0), Point(frame.width() / 2.0, frame.height().toDouble()), COLOR_PINK, 1)
-        Imgproc.line(frame, Point(0.0, frame.height() / 2.0), Point(frame.width().toDouble(), frame.height() / 2.0), COLOR_PINK, 1)
+        Imgproc.line(
+            frame,
+            Point(frame.width() / 2.0, 0.0),
+            Point(frame.width() / 2.0, frame.height().toDouble()),
+            COLOR_PINK,
+            1
+        )
+        Imgproc.line(
+            frame,
+            Point(0.0, frame.height() / 2.0),
+            Point(frame.width().toDouble(), frame.height() / 2.0),
+            COLOR_PINK,
+            1
+        )
     }
 
 
@@ -279,9 +321,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     override fun onCameraViewStopped() {}
     private fun checkCameraPermission(): Boolean {
         if (ContextCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.CAMERA
-                ) != PackageManager.PERMISSION_GRANTED
+                this,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 1234)
         } else {
