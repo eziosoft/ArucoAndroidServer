@@ -222,19 +222,19 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
         markersList.filter { it.ID == 0 }.map { // draw path of marker 0
 
-            var x = 10 * it.X
-            var y = 10 * it.Y
+            var x = 2.0 * it.X
+            var y = 2.0 * it.Y
             a += 1
 
             var c = Cartesian(x, y)
             var p = toPolar(c)
-            p.rotate(.00)
+            p.rotate(it.heading)
             c = toCartesian(p)
 
             val cam = Marker(null, 255, c.x, c.y, -it.Z)
-//            cam.heading = h
+            cam.heading = it.heading.invertAngle()
             path.add(cam.getCenterInWorld(frame.width() / 2, frame.height() / 2))
-            if (path.size > 200) {
+            if (path.size > 5000) {
                 path.removeAt(0)
             }
             it.draw(rgb)
@@ -270,8 +270,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     data class Cartesian(val x: Double, val y: Double)
 
     fun toCartesian(p: Polar): Cartesian {
-        val theta = p.theta / 180 * Math.PI
-        return Cartesian(p.r * cos(theta), p.r * sin(theta))
+//        val theta = p.theta / 180 * Math.PI
+        return Cartesian(p.r * cos(p.theta), p.r * sin(p.theta))
     }
 
     private fun drawPath(frame: Mat) {
