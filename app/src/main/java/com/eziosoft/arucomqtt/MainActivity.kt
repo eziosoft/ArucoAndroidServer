@@ -43,10 +43,7 @@ import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.cvtColor
 
 import java.util.*
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.atan2
-import kotlin.math.sqrt
+import kotlin.math.*
 
 
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
@@ -92,7 +89,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private var frame = Mat()
     private var rgb = Mat()
 
-    //    private var gray = Mat()
     private val ids = Mat()
     private val allCorners: MutableList<Mat> = ArrayList()
     private val rejected: MutableList<Mat> = ArrayList()
@@ -143,30 +139,17 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
     }
 
-    public override fun onPause() {
-        super.onPause()
-        disableCamera()
-    }
-
-    public override fun onDestroy() {
-        super.onDestroy()
-        disableCamera()
-    }
 
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
-
         frame = inputFrame.rgba()
-//        gray = inputFrame.gray()
+        cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
 
 //        Core.flip(frame, frame, 1) // flip front camera
 //        Core.flip(gray, gray, 1) // flip front camera
 
-        cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
-
         allCorners.clear()
         rejected.clear()
         markersList.clear()
-
 
         Aruco.detectMarkers(
             rgb,
@@ -180,8 +163,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         )
 
         if (!ids.empty()) {
-
-            val cam: Point3d? = null
             for (i in 0 until ids.rows()) { // for each marker
                 val markerCorners = allCorners[i]
                 val ID = ids[i, 0][0].toInt()
@@ -214,75 +195,66 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
 
 
-
-
-
-
-
-
-        markersList.filter { it.ID == 0 }.map { // draw path of marker 0
-
-            var x = 2.0 * it.X
-            var y = 2.0 * it.Y
-            a += 1
-
-            var c = Cartesian(x, y)
-            var p = toPolar(c)
-            p.rotate(it.heading)
-            c = toCartesian(p)
-
-            val cam = Marker(null, 255, c.x, c.y, -it.Z)
-            cam.heading = it.heading.invertAngle()
-            path.add(cam.getCenterInWorld(frame.width() / 2, frame.height() / 2))
-            if (path.size > 5000) {
-                path.removeAt(0)
-            }
-            it.draw(rgb)
-            markersList.add(cam)
-
-
-        }
-
+        calculateCameraPosition(rgb)
         drawPath(rgb)
         drawCenterLines(rgb)
-
-        CoroutineScope(Dispatchers.Main).launch { // run in main thread
-            showInfo()
-        }
+        showInfo()
 
         cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
-
         return frame
     }
 
-    fun toPolar(c: Cartesian): Polar {
-        val r = sqrt(c.x * c.x + c.y * c.y)
-        val theta = atan2(c.y, c.x)
-        return Polar(r, theta)
-    }
 
-    data class Polar(val r: Double, var theta: Double) {
-        fun rotate(angle: Double) {
-            theta += angle
+    private fun calculateCameraPosition(frame: Mat) {
+        markersList.filter { it.ID == 0 }.map { filteredMarker ->// draw path of marker 0
+            val x = 2.0 * filteredMarker.X
+            val y = 2.0 * filteredMarker.Y
+            a += 1
+
+            var c = Cartesian(x, y)
+            val p = c.toPolar()
+            p.rotate(filteredMarker.heading)
+            c = p.toCartesian()
+
+            val cam = Marker(null, 255, c.x, c.y, -filteredMarker.Z)
+            cam.heading = 2 * PI - filteredMarker.heading.addAngleRadians(PI/2)
+
+            drawRobot(
+                frame,
+                cam.getCenterInWorld(frame.width() / 2, frame.height() / 2),
+                cam.heading
+            )
+
+            path.add(cam.getCenterInWorld(frame.width() / 2, frame.height() / 2))
+
+            filteredMarker.draw(rgb)
+            markersList.add(cam)
         }
     }
 
-    data class Cartesian(val x: Double, val y: Double)
-
-    fun toCartesian(p: Polar): Cartesian {
-//        val theta = p.theta / 180 * Math.PI
-        return Cartesian(p.r * cos(p.theta), p.r * sin(p.theta))
-    }
-
     private fun drawPath(frame: Mat) {
-        if (!path.isEmpty()) {
+        if (path.isNotEmpty()) {
             val matOfPoint = MatOfPoint()
             matOfPoint.fromList(path)
             val matOfPointList = arrayListOf(matOfPoint)
 
             Imgproc.polylines(frame, matOfPointList, false, COLOR_RED, 2)
-            Imgproc.circle(frame, path.last(), 10, COLOR_RED, 2)
+            if (path.size > 5000) {
+                path.removeAt(0)
+            }
         }
+    }
+
+    private fun drawRobot(frame: Mat, point: Point, heading: Double) {
+
+        Imgproc.circle(frame, point, 10, COLOR_GREEN, 2)
+        Imgproc.line(
+            frame,
+            point,
+            Point(point.x + 50 * sin(heading), point.y + 50 * cos(heading)),
+            COLOR_GREEN,
+            2
+        )
     }
 
     private fun drawCenterLines(frame: Mat) {
@@ -303,15 +275,18 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
 
-    private suspend fun showInfo(extra: String = "") {
-        var s = ""
-        markersList.forEach {
-            s += it.toString() + "\n"
-        }
+    private fun showInfo(extra: String = "") {
+        CoroutineScope(Dispatchers.Main).launch {
+            var s = ""
+            markersList.forEach {
+                s += it.toString() + "\n"
+            }
 
-        s += "\n\n$extra"
-        binding.textView.text = s
+            s += "\n\n$extra"
+            binding.textView.text = s
+        }
     }
+
 
     private fun disableCamera() {
         binding.cameraView.disableView()
@@ -332,6 +307,17 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         return false
     }
 
+
+    public override fun onPause() {
+        super.onPause()
+        disableCamera()
+    }
+
+    public override fun onDestroy() {
+        super.onDestroy()
+        disableCamera()
+    }
+
     companion object {
         private const val TAG = "ARUCO"
 
@@ -340,6 +326,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
         @Transient
         val COLOR_RED = Scalar(255.0, 0.0, 0.0)
+
+        @Transient
+        val COLOR_GREEN = Scalar(0.0, 255.0, 0.0)
     }
 }
 

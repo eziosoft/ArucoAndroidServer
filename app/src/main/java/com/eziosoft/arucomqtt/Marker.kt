@@ -102,6 +102,7 @@ data class Marker(
         Imgproc.putText(frame, toString(), centerInPixels, 1, 1.0, c1)
     }
 
+
     companion object {
         @Transient
         private val c1 = Scalar(255.0, 100.0, 0.0)
@@ -112,6 +113,4 @@ data class Marker(
 
 }
 
-fun Double.toRadian(): Double = this / 180 * Math.PI
-fun Double.toDegree(): Double = this * 180.0 / Math.PI
-fun Double.invertAngle() = (this + Math.PI) % (2 * Math.PI)
+

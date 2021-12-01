@@ -17,16 +17,25 @@
 
 package com.eziosoft.arucomqtt
 
-data class Point3d(
-    val x: Double = 0.0,
-    val y: Double = 0.0,
-    val z: Double = 0.0,
-//        val bankX: Double = 0.0,
-//        val headingY: Double = 0.0,
-//        val attitudeZ: Double = 0.0,
-    val name: String
-) {
-    override fun toString() =
-        "$name-${x.round(2)} ${y.round(2)} ${z.round(2)}"
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
+
+data class Polar(val r: Double, var theta: Double) {
+    fun rotate(angleRadians: Double) {
+        theta += angleRadians
+    }
+
+    fun toCartesian(): Cartesian =
+        Cartesian(r * cos(theta), r * sin(theta))
+}
+
+data class Cartesian(val x: Double, val y: Double) {
+    fun toPolar(): Polar {
+        val r = sqrt(x * x + y * y)
+        val theta = atan2(y, x)
+        return Polar(r, theta)
+    }
 }

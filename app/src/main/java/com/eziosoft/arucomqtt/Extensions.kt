@@ -18,3 +18,7 @@
 package com.eziosoft.arucomqtt
 
 fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDouble()
+fun Double.toRadian(): Double = this / 180 * Math.PI
+fun Double.toDegree(): Double = this * 180.0 / Math.PI
+fun Double.invertAngleRadians() = (this + Math.PI) % (2 * Math.PI)
+fun Double.addAngleRadians(angleRadians:Double) = (this + angleRadians) % (2 * Math.PI)
