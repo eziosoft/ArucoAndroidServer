@@ -23,15 +23,32 @@
             android:textColor="#0FF"/>
 
     <CheckBox
-        android:id="@+id/checkBox"
+        android:id="@+id/calB"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="CAL" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="CAL"
+        android:textColor="#FFF"
+        tools:textColor = "#000"/>
+
+    <CheckBox
+        android:id="@+id/tryCalB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="7dp"
+        android:layout_toLeftOf="@id/calB"
+        android:layout_toEndOf="@+id/calB"
+        android:text="try cal"
+        android:textColor="#FFF"
+        tools:textColor="#000" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/captureB"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/checkBox"
-        android:text="Button" />
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/tryCalB"
+        android:text="capture" />
 </RelativeLayout>

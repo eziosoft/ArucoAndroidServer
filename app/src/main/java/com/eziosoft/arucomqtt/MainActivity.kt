@@ -32,7 +32,11 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.util.Log
+import android.widget.CheckBox
+import android.widget.CompoundButton
+import android.widget.RadioGroup
 import androidx.core.app.ActivityCompat
+import androidx.core.view.isVisible
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +48,6 @@ import org.opencv.imgproc.Imgproc.cvtColor
 
 import java.util.*
 import kotlin.math.*
-import android.R.attr.path
 import org.opencv.calib3d.Calib3d
 import org.opencv.core.Point3
 
@@ -60,35 +63,51 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val CAMERA_WIDTH = 720
     private val CAMERA_HEIGH = 480
 
-    private val MARKER_LENGTH = 0.17F
+    private val MARKER_LENGTH = 170F //170mm
     private val CAMERA_MATRIX: Mat = Mat(3, 3, CvType.CV_32F)
     private val CAMERA_DISTORTION: Mat = Mat(1, 5, CvType.CV_32F)
 
     var a = 0.0
-//
-//    cameraMatrix:[11856.63012674061, 0, 1600.167713171325;
-//    0, 791.1896498830189, 277.7816299735354;
+
+    val cameraCalibrator = CameraCalibrator(CAMERA_WIDTH, CAMERA_HEIGH)
+//oneplus 5t back camera
+//    I/OCV::CameraCalibrator: Average re-projection error: 0.428173
+//    I/OCV::CameraCalibrator: Camera matrix: [592.6818457769918, 0, 360;
+//    0, 592.6818457769918, 240;
 //    0, 0, 1]
-//    distCoeffs:[68.15872382572742, -5449.488762150415, -0.6506523679409972, -1.127600613665067, 100053.6076178516]
+//    I/OCV::CameraCalibrator: Distortion coefficients: [0.09613719425745187;
+//    -0.2039451180901536;
+//    0;
+//    0;
+//    0]
+
+    //oneplus 5t front camera
+//    I/OCV::CameraCalibrator: Average re-projection error: 0.415596
+//    I/OCV::CameraCalibrator: Camera matrix: [565.5056849747607, 0, 360;
+//    0, 565.5056849747607, 240;
+//    0, 0, 1]
+//    I/OCV::CameraCalibrator: Distortion coefficients: [0.08913809371204115;
+//    -0.1701755981832315;
+//    0;
+//    0;
+//    0]
 
     init {
-//        [467.74270306499267, 0.0, 320.5,
-//        0.0, 467.74270306499267, 240.5,
-//        0.0, 0.0, 1.0]
-        CAMERA_MATRIX.put(0, 0, 467.74270306499267)
+
+        CAMERA_MATRIX.put(0, 0, 565.5056849747607)
         CAMERA_MATRIX.put(0, 1, 0.0)
-        CAMERA_MATRIX.put(0, 2, 320.5)
+        CAMERA_MATRIX.put(0, 2, 360.0)
 
         CAMERA_MATRIX.put(1, 0, 0.0)
-        CAMERA_MATRIX.put(1, 1, 467.74270306499267)
-        CAMERA_MATRIX.put(1, 2, 240.5)
+        CAMERA_MATRIX.put(1, 1, 565.5056849747607)
+        CAMERA_MATRIX.put(1, 2, 240.0)
 
         CAMERA_MATRIX.put(2, 0, 0.0)
         CAMERA_MATRIX.put(2, 1, 0.0)
         CAMERA_MATRIX.put(2, 2, 1.0)
 
-        CAMERA_DISTORTION.put(0, 0, 0.0)
-        CAMERA_DISTORTION.put(0, 1, 0.0)
+        CAMERA_DISTORTION.put(0, 0, 0.08913809371204115)
+        CAMERA_DISTORTION.put(0, 1, -0.1701755981832315)
         CAMERA_DISTORTION.put(0, 2, 0.0)
         CAMERA_DISTORTION.put(0, 3, 0.0)
         CAMERA_DISTORTION.put(0, 4, 0.0)
@@ -137,8 +156,13 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             cameraView.setCvCameraViewListener(this@MainActivity)
         }
 
-        binding.button.setOnClickListener {
-            takeCalibration = true
+        binding.captureB.setOnClickListener {
+            captureCal = true
+        }
+
+        binding.captureB.isVisible = false
+        binding.calB.setOnCheckedChangeListener { _, checked ->
+            binding.captureB.isVisible = checked
         }
     }
 
@@ -155,10 +179,19 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
 
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
-        val CALIBRATE = binding.checkBox.isChecked
+        val CALIBRATE = binding.calB.isChecked
         if (CALIBRATE) {
             frame = inputFrame.rgba()
-            calibrate(frame)
+            val gray = inputFrame.gray()
+//            calibrate(frame)
+            cameraCalibrator.processFrame(gray, frame)
+            if (captureCal) {
+                captureCal = false
+                cameraCalibrator.addCorners()
+                val calSummary = cameraCalibrator.calibrate()
+                log(calSummary)
+            }
+            return frame
         } else {
             frame = inputFrame.rgba()
             cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
@@ -221,11 +254,20 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
 
             cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
-
         }
-        var m =Mat()
-        Imgproc.undistort(rgb, m, CAMERA_MATRIX, CAMERA_DISTORTION)
-        return m
+
+        return if (binding.tryCalB.isChecked) {
+            var m = Mat()
+            Imgproc.undistort(
+                rgb,
+                m,
+                cameraCalibrator.cameraMatrix,
+                cameraCalibrator.distortionCoefficients
+            )
+            m
+        } else {
+            frame
+        }
     }
 
 
@@ -235,10 +277,10 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     var distCoeffs = Mat()
     var rvecs = mutableListOf<Mat>()
     var tvecs = mutableListOf<Mat>()
-    var takeCalibration = false
+    var captureCal = false
     fun calibrate(gray: Mat) {
-        val SIZE_X = 9
-        val SIZE_Y = 6
+        val SIZE_X = 6
+        val SIZE_Y = 9
 
         val patternSize = Size(SIZE_X.toDouble(), SIZE_Y.toDouble())
         var actual_corners = MatOfPoint2f()
@@ -251,11 +293,11 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         )
 
 
-        if (found_chess && takeCalibration) {
+        if (found_chess && captureCal) {
             corners.add(actual_corners)
 //            Imgproc.cornerSubPix(gray, actual_corners,  Size(SIZE_Y*2+1.0,SIZE_X*2+1.0),  Size(-1.0,-1.0),  TermCriteria(TermCriteria.EPS+TermCriteria.MAX_ITER,30,0.1));
-            var points: MatOfPoint3f?
-            val a: Mat = MatOfPoint3f()
+            var points = MatOfPoint3f()
+            val a = MatOfPoint3f()
             for (x in 0 until SIZE_X) {
                 for (y in 0 until SIZE_Y) {
                     points = MatOfPoint3f(Point3(y.toDouble(), x.toDouble(), 0.0))
@@ -272,7 +314,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 rvecs,
                 tvecs
             )
-            takeCalibration = false
+            captureCal = false
         }
 
         Calib3d.drawChessboardCorners(gray, patternSize, actual_corners, found_chess)
