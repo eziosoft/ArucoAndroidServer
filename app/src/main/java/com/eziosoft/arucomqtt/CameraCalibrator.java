@@ -71,31 +71,35 @@ public class CameraCalibrator {
     }
 
     public String calibrate() {
-        ArrayList<Mat> rvecs = new ArrayList<>();
-        ArrayList<Mat> tvecs = new ArrayList<>();
-        Mat reprojectionErrors = new Mat();
-        ArrayList<Mat> objectPoints = new ArrayList<>();
-        objectPoints.add(Mat.zeros(mCornersSize, 1, CvType.CV_32FC3));
-        calcBoardCornerPositions(objectPoints.get(0));
-        for (int i = 1; i < mCornersBuffer.size(); i++) {
-            objectPoints.add(objectPoints.get(0));
+        try {
+            ArrayList<Mat> rvecs = new ArrayList<>();
+            ArrayList<Mat> tvecs = new ArrayList<>();
+            Mat reprojectionErrors = new Mat();
+            ArrayList<Mat> objectPoints = new ArrayList<>();
+            objectPoints.add(Mat.zeros(mCornersSize, 1, CvType.CV_32FC3));
+            calcBoardCornerPositions(objectPoints.get(0));
+            for (int i = 1; i < mCornersBuffer.size(); i++) {
+                objectPoints.add(objectPoints.get(0));
+            }
+
+            Calib3d.calibrateCamera(objectPoints, mCornersBuffer, mImageSize,
+                    mCameraMatrix, mDistortionCoefficients, rvecs, tvecs, mFlags);
+
+            mIsCalibrated = Core.checkRange(mCameraMatrix)
+                    && Core.checkRange(mDistortionCoefficients);
+
+            mRms = computeReprojectionErrors(objectPoints, rvecs, tvecs, reprojectionErrors);
+            Log.i(TAG, String.format("Average re-projection error: %f", mRms));
+            Log.i(TAG, "Camera matrix: " + mCameraMatrix.dump());
+            Log.i(TAG, "Distortion coefficients: " + mDistortionCoefficients.dump());
+
+            String s = String.format("Average re-projection error: %f", mRms) + "\n";
+            s += "Camera matrix: " + mCameraMatrix.dump() + "\n";
+            s += "Distortion coefficients: " + mDistortionCoefficients.dump() + "\n";
+            return s;
+        } catch (Exception e) {
+            return "error";
         }
-
-        Calib3d.calibrateCamera(objectPoints, mCornersBuffer, mImageSize,
-                mCameraMatrix, mDistortionCoefficients, rvecs, tvecs, mFlags);
-
-        mIsCalibrated = Core.checkRange(mCameraMatrix)
-                && Core.checkRange(mDistortionCoefficients);
-
-        mRms = computeReprojectionErrors(objectPoints, rvecs, tvecs, reprojectionErrors);
-        Log.i(TAG, String.format("Average re-projection error: %f", mRms));
-        Log.i(TAG, "Camera matrix: " + mCameraMatrix.dump());
-        Log.i(TAG, "Distortion coefficients: " + mDistortionCoefficients.dump());
-
-        String s = String.format("Average re-projection error: %f", mRms) + "\n";
-        s += "Camera matrix: " + mCameraMatrix.dump() + "\n";
-        s += "Distortion coefficients: " + mDistortionCoefficients.dump() + "\n";
-        return s;
     }
 
     public void clearCorners() {
