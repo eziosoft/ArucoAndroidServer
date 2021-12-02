@@ -44,6 +44,11 @@ import org.opencv.imgproc.Imgproc.cvtColor
 
 import java.util.*
 import kotlin.math.*
+import android.R.attr.path
+import org.opencv.calib3d.Calib3d
+import org.opencv.core.Point3
+
+import org.opencv.core.MatOfPoint3f
 
 
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
@@ -55,11 +60,16 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val CAMERA_WIDTH = 720
     private val CAMERA_HEIGH = 480
 
-    private val MARKER_LENGTH = 10F
+    private val MARKER_LENGTH = 0.17F
     private val CAMERA_MATRIX: Mat = Mat(3, 3, CvType.CV_32F)
     private val CAMERA_DISTORTION: Mat = Mat(1, 5, CvType.CV_32F)
 
     var a = 0.0
+//
+//    cameraMatrix:[11856.63012674061, 0, 1600.167713171325;
+//    0, 791.1896498830189, 277.7816299735354;
+//    0, 0, 1]
+//    distCoeffs:[68.15872382572742, -5449.488762150415, -0.6506523679409972, -1.127600613665067, 100053.6076178516]
 
     init {
 //        [467.74270306499267, 0.0, 320.5,
@@ -126,6 +136,10 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             cameraView.visibility = SurfaceView.VISIBLE
             cameraView.setCvCameraViewListener(this@MainActivity)
         }
+
+        binding.button.setOnClickListener {
+            takeCalibration = true
+        }
     }
 
     public override fun onResume() {
@@ -141,69 +155,134 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
 
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
-        frame = inputFrame.rgba()
-        cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
+        val CALIBRATE = binding.checkBox.isChecked
+        if (CALIBRATE) {
+            frame = inputFrame.rgba()
+            calibrate(frame)
+        } else {
+            frame = inputFrame.rgba()
+            cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
 
 //        Core.flip(frame, frame, 1) // flip front camera
 //        Core.flip(gray, gray, 1) // flip front camera
 
-        allCorners.clear()
-        rejected.clear()
-        markersList.clear()
+            allCorners.clear()
+            rejected.clear()
+            markersList.clear()
 
-        Aruco.detectMarkers(
-            rgb,
-            DICTIONARY,
-            allCorners,
-            ids,
-            detectorParameters,
-            rejected,
-            CAMERA_MATRIX,
-            CAMERA_DISTORTION
-        )
+            Aruco.detectMarkers(
+                rgb,
+                DICTIONARY,
+                allCorners,
+                ids,
+                detectorParameters,
+                rejected,
+                CAMERA_MATRIX,
+                CAMERA_DISTORTION
+            )
 
-        if (!ids.empty()) {
-            for (i in 0 until ids.rows()) { // for each marker
-                val markerCorners = allCorners[i]
-                val ID = ids[i, 0][0].toInt()
+            if (!ids.empty()) {
+                for (i in 0 until ids.rows()) { // for each marker
+                    val markerCorners = allCorners[i]
+                    val ID = ids[i, 0][0].toInt()
 
-                val rvec = Mat(3, 1, CV_32FC1) //attitude of the marker respect to camera frame
-                val tvec = Mat(3, 1, CV_32FC1) //position of the marker in camera frame
+                    val rvec = Mat(3, 1, CV_32FC1) //attitude of the marker respect to camera frame
+                    val tvec = Mat(3, 1, CV_32FC1) //position of the marker in camera frame
 
-                Aruco.estimatePoseSingleMarkers(
-                    mutableListOf(markerCorners),
-                    MARKER_LENGTH,
-                    CAMERA_MATRIX,
-                    CAMERA_DISTORTION,
-                    rvec,
-                    tvec
-                )
+                    Aruco.estimatePoseSingleMarkers(
+                        mutableListOf(markerCorners),
+                        MARKER_LENGTH,
+                        CAMERA_MATRIX,
+                        CAMERA_DISTORTION,
+                        rvec,
+                        tvec
+                    )
 
-                val marker = Marker(
-                    markerCorners,
-                    ID,
-                    X = tvec[0, 0][0],
-                    Y = tvec[0, 0][1],
-                    Z = tvec[0, 0][2]
-                )
+                    val marker = Marker(
+                        markerCorners,
+                        ID,
+                        X = tvec[0, 0][0],
+                        Y = tvec[0, 0][1],
+                        Z = tvec[0, 0][2]
+                    )
 
 //                Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
-                markersList.add(marker)
+                    markersList.add(marker)
+                }
+
+
             }
 
 
+            calculateCameraPosition(rgb)
+            drawPath(rgb)
+            drawCenterLines(rgb)
+            showInfo()
+
+
+            cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
+
         }
-
-
-        calculateCameraPosition(rgb)
-        drawPath(rgb)
-        drawCenterLines(rgb)
-        showInfo()
-
-        cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
-        return frame
+        var m =Mat()
+        Imgproc.undistort(rgb, m, CAMERA_MATRIX, CAMERA_DISTORTION)
+        return m
     }
 
+
+    val corners = mutableListOf<MatOfPoint2f>()
+    val object_points = mutableListOf<Mat>()
+    var cameraMatrix = Mat()
+    var distCoeffs = Mat()
+    var rvecs = mutableListOf<Mat>()
+    var tvecs = mutableListOf<Mat>()
+    var takeCalibration = false
+    fun calibrate(gray: Mat) {
+        val SIZE_X = 9
+        val SIZE_Y = 6
+
+        val patternSize = Size(SIZE_X.toDouble(), SIZE_Y.toDouble())
+        var actual_corners = MatOfPoint2f()
+
+        val found_chess = Calib3d.findChessboardCorners(
+            gray,
+            patternSize,
+            actual_corners,
+            Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE
+        )
+
+
+        if (found_chess && takeCalibration) {
+            corners.add(actual_corners)
+//            Imgproc.cornerSubPix(gray, actual_corners,  Size(SIZE_Y*2+1.0,SIZE_X*2+1.0),  Size(-1.0,-1.0),  TermCriteria(TermCriteria.EPS+TermCriteria.MAX_ITER,30,0.1));
+            var points: MatOfPoint3f?
+            val a: Mat = MatOfPoint3f()
+            for (x in 0 until SIZE_X) {
+                for (y in 0 until SIZE_Y) {
+                    points = MatOfPoint3f(Point3(y.toDouble(), x.toDouble(), 0.0))
+                    a.push_back(points)
+                }
+            }
+            object_points.add(a)
+            Calib3d.calibrateCamera(
+                object_points,
+                corners.toList(),
+                gray.size(),
+                cameraMatrix,
+                distCoeffs,
+                rvecs,
+                tvecs
+            )
+            takeCalibration = false
+        }
+
+        Calib3d.drawChessboardCorners(gray, patternSize, actual_corners, found_chess)
+
+        var s = "frames:${corners.size},\n" +
+                "cameraMatrix:${cameraMatrix.dump()}\n" +
+                "distCoeffs:${distCoeffs.dump()}\n"
+        log(s)
+        Log.d(TAG, s)
+    }
 
     private fun calculateCameraPosition(frame: Mat) {
         markersList.filter { it.ID == 0 }.map { filteredMarker ->// draw path of marker 0
@@ -217,7 +296,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             c = p.toCartesian()
 
             val cam = Marker(null, 255, c.x, c.y, -filteredMarker.Z)
-            cam.heading = 2 * PI - filteredMarker.heading.addAngleRadians(PI/2)
+            cam.heading = 2 * PI - filteredMarker.heading.addAngleRadians(PI / 2)
 
             drawRobot(
                 frame,
@@ -274,6 +353,11 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         )
     }
 
+    private fun log(str: String) {
+        CoroutineScope(Dispatchers.Main).launch {
+            binding.textView.text = str
+        }
+    }
 
     private fun showInfo(extra: String = "") {
         CoroutineScope(Dispatchers.Main).launch {
