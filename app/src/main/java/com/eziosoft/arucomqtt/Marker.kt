@@ -18,27 +18,27 @@ package com.eziosoft.arucomqtt
 
 import org.opencv.core.Mat
 import org.opencv.core.Point
-import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 import kotlin.math.*
 
 data class Marker(
-    val corners: Mat? = null,
     val ID: Int,
     val X: Double,
     val Y: Double,
-    val Z: Double
-) {
-    var centerInPixels: Point = Point(0.0, 0.0)
+    val Z: Double,
+    val corners: Mat? = null,
+    var centerInPixels: Point = Point(0.0, 0.0),
     var heading: Double = 0.0
+) {
+
     private var size: Int = 0
     private val markerCornersInPixels = arrayOfNulls<Point>(4)
 
 
     init {
         corners?.let {
-            centerInPixels = getMarkerCenter(corners)
-            heading = getMarkerHeading(corners)
+            centerInPixels = getMarkerCenterInPixels(corners)
+            heading = getMarkerHeadingInRadians(corners)
             for (i in 0..3) {
                 markerCornersInPixels[i] = Point(corners[0, i][0], corners[0, i][1])
             }
@@ -57,14 +57,15 @@ data class Marker(
     }
 
 
-    fun getCenterInWorld(offsetX: Int = 0, offsetY: Int = 0) = Point(X + offsetX, Y + offsetY)
+    fun getPositionInWorldCoordinates(offsetX: Int = 0, offsetY: Int = 0) = Point(X + offsetX, Y + offsetY)
 
-    private fun getMarkerHeading(corners: Mat): Double {
-        val up = getMarkerUp(corners)
+
+    private fun getMarkerHeadingInRadians(corners: Mat): Double {
+        val up = getMarkerFront(corners)
         return atan2(up.x - centerInPixels.x, up.y - centerInPixels.y)
     }
 
-    private fun getMarkerCenter(corners: Mat): Point {
+    private fun getMarkerCenterInPixels(corners: Mat): Point {
         var x = 0.0
         var y = 0.0
         for (i in 0..3) {
@@ -74,7 +75,7 @@ data class Marker(
         return Point(x / 4, y / 4)
     }
 
-    private fun getMarkerUp(corners: Mat): Point {
+    private fun getMarkerFront(corners: Mat): Point {
         var x = 0.0
         var y = 0.0
         for (i in 0..1) {
@@ -103,13 +104,6 @@ data class Marker(
     }
 
 
-    companion object {
-        @Transient
-        private val c1 = Scalar(255.0, 100.0, 0.0)
-
-        @Transient
-        private val c2 = Scalar(255.0, 0.0, 255.0)
-    }
 
 }
 
