@@ -19,16 +19,19 @@ package com.eziosoft.arucomqtt
 
 import android.util.Log
 import org.opencv.calib3d.Calib3d
+import org.opencv.core.*
+import kotlin.math.PI
+import org.opencv.core.Mat
+
 import org.opencv.core.Core
 import org.opencv.core.CvType
-import org.opencv.core.Mat
-import org.opencv.core.Scalar
-import kotlin.math.PI
+import org.opencv.core.MatOfDouble
+
 
 class Camera {
 
     fun calculateCameraPosition2(rvec: Mat, tvec: Mat): Marker {
-        val R = Mat()
+        val R = Mat(3, 3, CvType.CV_64F)
         Calib3d.Rodrigues(rvec, R)
 
         val camR = R.t()
@@ -37,41 +40,43 @@ class Camera {
         Calib3d.Rodrigues(R, camRvec)
 
         val scalar = Scalar(-1.0)
-        val _camR = Mat()
+        var _camR = Mat(1,3,CvType.CV_64F)
         Core.multiply(camR, scalar, _camR)
 
 
-        Log.d("aaa", "rvec: ${rvec.dump()}")
-        Log.d("aaa", "tvec: ${tvec.dump()}")
-        Log.d("aaa", "R: ${R.dump()}")
-        Log.v("aaa", "camR: ${camR.dump()}")
-        Log.d("aaa", "_camR: ${_camR.dump()}")
-        Log.d("aaa", "camRvec: ${camRvec.dump()}")
+        var camTvec = Mat(1,3,CvType.CV_64F)
 
 
-        val mat1 = Mat(1, 3, CvType.CV_32F) // A matrix with 1 row and 3 columns
-        mat1.put(0, 0, 2.0) // Set row 1 , column 1
-        mat1.put(0, 1, 0.5) // Set row 1 , column 2
-        mat1.put(0, 2, 1.0) // Set row 1 , column 3
-        val mat2 = Mat(3, 1, CvType.CV_32F) // A matrix with 1 row and 3 columns
-        mat1.put(0, 0, 2.0) // Set row 1 , column 1
-        mat1.put(1, 0, 0.5) // Set row 1 , column 2
-        mat1.put(2, 0, 1.0) // Set row 1 , column 3
+        val tvec_conv=Mat(1,3,CvType.CV_64F)
+        val d = rvec.get(0,0)[0]
+        Log.d("aaa", "double : $d")
+        tvec_conv.put(0,0,1.0)
+        tvec_conv.put(0,1,2.0)
+        tvec_conv.put(0,2,3.0)
 
+        _camR.convertTo(_camR, CvType.CV_64F)
 
-        val camTvec = Mat()
-        val s = Scalar(tvec[0, 0][0], tvec[0, 0][1], tvec[0, 0][2])
-        Core.multiply(_camR, s, camTvec)
+        logMat(tvec, "tvec")
+        logMat(tvec_conv, "tvec_conv")
+        logMat(_camR, "_camR")
+        logMat(camR, "camR")
 
-        Log.d("aaa", "camTvec: ${camTvec.dump()}")
+        Core.multiply(tvec_conv, tvec_conv, camTvec)
+//        Core.gemm(_camR,tvec_conv , 1.0, Mat(), 0.0, camTvec, 0)
+
 
         val marker = Marker(
             265,
-            x = camTvec[0, 0][0],
-            y = camTvec[0, 0][1],
-            z = camTvec[0, 0][2]
+            x = 0.0,//camTvec[0, 0][0],
+            y = 0.0,// camTvec[0, 0][1],
+            z = 0.0// camTvec[0, 0][2]
         )
         return marker
+    }
+
+
+    fun logMat(m: Mat, name: String) {
+        Log.d("aaa", "$name:${m.type()} -> ${m.dump()}")
     }
 
     fun calculateCameraPosition(marker: Marker, frame: Mat): Marker {

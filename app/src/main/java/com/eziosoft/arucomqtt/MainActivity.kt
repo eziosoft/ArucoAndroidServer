@@ -197,7 +197,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                     // Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
                     markersList.add(marker)
 
-//                    cam1 = Camera().calculateCameraPosition2(rvec, tvec)
+                    cam1 = Camera().calculateCameraPosition2(rvec, tvec)
 //                    markersList.add(cam1)
                 }
             }
