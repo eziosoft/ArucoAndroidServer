@@ -22,10 +22,10 @@ import org.opencv.imgproc.Imgproc
 import kotlin.math.*
 
 data class Marker(
-    val ID: Int,
-    val X: Double,
-    val Y: Double,
-    val Z: Double,
+    val id: Int,
+    val x: Double,
+    val y: Double,
+    val z: Double,
     val corners: Mat? = null,
     var centerInPixels: Point = Point(0.0, 0.0),
     var heading: Double = 0.0
@@ -51,13 +51,13 @@ data class Marker(
 
 
     override fun toString(): String {
-        return "$ID--X${X.round(2)} Y${Y.round(2)} Z${Z.round(2)} H${heading.round(2)}(${
+        return "$id--X${x.round(2)} Y${y.round(2)} Z${z.round(2)} H${heading.round(2)}(${
             heading.toDegree().roundToInt()
         })"
     }
 
 
-    fun getPositionInWorldCoordinates(offsetX: Int = 0, offsetY: Int = 0) = Point(X + offsetX, Y + offsetY)
+    fun getPositionInWorldCoordinates(offsetX: Int = 0, offsetY: Int = 0) = Point(x + offsetX, y + offsetY)
 
 
     private fun getMarkerHeadingInRadians(corners: Mat): Double {

@@ -151,6 +151,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             return frame
 
         } else {
+            var cam1: Marker
             frame = inputFrame.rgba()
             cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
 
@@ -187,14 +188,17 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
                     val marker = Marker(
                         id,
-                        X = tvec[0, 0][0],
-                        Y = tvec[0, 0][1],
-                        Z = tvec[0, 0][2],
+                        x = tvec[0, 0][0],
+                        y = tvec[0, 0][1],
+                        z = tvec[0, 0][2],
                         markerCorners
                     )
 
                     // Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
                     markersList.add(marker)
+
+//                    cam1 = Camera().calculateCameraPosition2(rvec, tvec)
+//                    markersList.add(cam1)
                 }
             }
 
@@ -202,7 +206,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 it.draw(rgb)
             }
 
-            markersList.filter { it.ID == 0 }.map { filteredMarker ->// draw path of marker 0
+            markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
                 val cam = Camera().calculateCameraPosition(filteredMarker, rgb)
                 markersList.add(cam)
 
