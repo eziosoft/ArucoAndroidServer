@@ -32,11 +32,13 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.util.Log
-import android.widget.CheckBox
-import android.widget.CompoundButton
-import android.widget.RadioGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
+import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_DISTORTION
+import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_FRONT
+import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_HEIGH
+import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_MATRIX
+import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_WIDTH
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,70 +50,24 @@ import org.opencv.imgproc.Imgproc.cvtColor
 
 import java.util.*
 import kotlin.math.*
-import org.opencv.calib3d.Calib3d
-import org.opencv.core.Point3
-
-import org.opencv.core.MatOfPoint3f
 
 
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private lateinit var binding: ActivityMainBinding
 
-    private val path = mutableListOf<Point>() //to draw a path
 
     private val DICTIONARY = Aruco.getPredefinedDictionary(Aruco.DICT_4X4_100)
-    private val CAMERA_WIDTH = 720
-    private val CAMERA_HEIGH = 480
+
 
     private val MARKER_LENGTH = 170F //170mm
-    private val CAMERA_MATRIX: Mat = Mat(3, 3, CvType.CV_32F)
-    private val CAMERA_DISTORTION: Mat = Mat(1, 5, CvType.CV_32F)
+
 
     var a = 0.0
 
     val cameraCalibrator = CameraCalibrator(CAMERA_WIDTH, CAMERA_HEIGH)
-//oneplus 5t back camera
-//    I/OCV::CameraCalibrator: Average re-projection error: 0.428173
-//    I/OCV::CameraCalibrator: Camera matrix: [592.6818457769918, 0, 360;
-//    0, 592.6818457769918, 240;
-//    0, 0, 1]
-//    I/OCV::CameraCalibrator: Distortion coefficients: [0.09613719425745187;
-//    -0.2039451180901536;
-//    0;
-//    0;
-//    0]
 
-    //oneplus 5t front camera
-//    I/OCV::CameraCalibrator: Average re-projection error: 0.415596
-//    I/OCV::CameraCalibrator: Camera matrix: [565.5056849747607, 0, 360;
-//    0, 565.5056849747607, 240;
-//    0, 0, 1]
-//    I/OCV::CameraCalibrator: Distortion coefficients: [0.08913809371204115;
-//    -0.1701755981832315;
-//    0;
-//    0;
-//    0]
-
-    init {
-
-        CAMERA_MATRIX.put(0, 0, 565.5056849747607)
-        CAMERA_MATRIX.put(0, 1, 0.0)
-        CAMERA_MATRIX.put(0, 2, 360.0)
-
-        CAMERA_MATRIX.put(1, 0, 0.0)
-        CAMERA_MATRIX.put(1, 1, 565.5056849747607)
-        CAMERA_MATRIX.put(1, 2, 240.0)
-
-        CAMERA_MATRIX.put(2, 0, 0.0)
-        CAMERA_MATRIX.put(2, 1, 0.0)
-        CAMERA_MATRIX.put(2, 2, 1.0)
-
-        CAMERA_DISTORTION.put(0, 0, 0.08913809371204115)
-        CAMERA_DISTORTION.put(0, 1, -0.1701755981832315)
-        CAMERA_DISTORTION.put(0, 2, 0.0)
-        CAMERA_DISTORTION.put(0, 3, 0.0)
-        CAMERA_DISTORTION.put(0, 4, 0.0)
-    }
+    var captureCalibrationFrame = false
+    var calibrate = false
 
 
     private val detectorParameters = DetectorParameters.create()
@@ -151,18 +107,20 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         setContentView(binding.root)
 
         with(binding) {
+            cameraView.setCameraIndex(CAMERA_FRONT)
             cameraView.setMaxFrameSize(CAMERA_WIDTH, CAMERA_HEIGH)
             cameraView.visibility = SurfaceView.VISIBLE
             cameraView.setCvCameraViewListener(this@MainActivity)
         }
 
         binding.captureB.setOnClickListener {
-            captureCal = true
+            captureCalibrationFrame = true
         }
 
         binding.captureB.isVisible = false
         binding.calB.setOnCheckedChangeListener { _, checked ->
             binding.captureB.isVisible = checked
+            calibrate = checked
         }
     }
 
@@ -179,25 +137,23 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
 
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
-        val CALIBRATE = binding.calB.isChecked
-        if (CALIBRATE) {
+        if (calibrate) {
             frame = inputFrame.rgba()
             val gray = inputFrame.gray()
-//            calibrate(frame)
             cameraCalibrator.processFrame(gray, frame)
-            if (captureCal) {
-                captureCal = false
+
+            if (captureCalibrationFrame) {
+                captureCalibrationFrame = false
                 cameraCalibrator.addCorners()
                 val calSummary = cameraCalibrator.calibrate()
                 log(calSummary)
             }
             return frame
+
         } else {
+            var cam1: Marker
             frame = inputFrame.rgba()
             cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
-
-//        Core.flip(frame, frame, 1) // flip front camera
-//        Core.flip(gray, gray, 1) // flip front camera
 
             allCorners.clear()
             rejected.clear()
@@ -217,8 +173,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             if (!ids.empty()) {
                 for (i in 0 until ids.rows()) { // for each marker
                     val markerCorners = allCorners[i]
-                    val ID = ids[i, 0][0].toInt()
-
+                    val id = ids[i, 0][0].toInt()
                     val rvec = Mat(3, 1, CV_32FC1) //attitude of the marker respect to camera frame
                     val tvec = Mat(3, 1, CV_32FC1) //position of the marker in camera frame
 
@@ -232,32 +187,50 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                     )
 
                     val marker = Marker(
-                        markerCorners,
-                        ID,
-                        X = tvec[0, 0][0],
-                        Y = tvec[0, 0][1],
-                        Z = tvec[0, 0][2]
+                        id,
+                        x = tvec[0, 0][0],
+                        y = tvec[0, 0][1],
+                        z = tvec[0, 0][2],
+                        markerCorners
                     )
 
-//                Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
+                    // Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
                     markersList.add(marker)
+
+//                    cam1 = Camera().calculateCameraPosition2(rvec, tvec)
+//                    markersList.add(cam1)
                 }
-
-
             }
 
+            markersList.map {
+                it.draw(rgb)
+            }
 
-            calculateCameraPosition(rgb)
+            markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
+                val cam = Camera().calculateCameraPosition(filteredMarker, rgb)
+                markersList.add(cam)
+
+                cam.getPositionInWorldCoordinates(
+                    frame.width() / 2,
+                    frame.height() / 2
+                ).addToPath()
+
+                drawRobot(
+                    rgb,
+                    cam.getPositionInWorldCoordinates(frame.width() / 2, frame.height() / 2),
+                    cam.heading
+                )
+            }
+
             drawPath(rgb)
             drawCenterLines(rgb)
-            showInfo()
-
 
             cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
+            showInfo()
         }
 
         return if (binding.tryCalB.isChecked) {
-            var m = Mat()
+            val m = Mat()
             Imgproc.undistort(
                 rgb,
                 m,
@@ -268,131 +241,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         } else {
             frame
         }
-    }
-
-
-    val corners = mutableListOf<MatOfPoint2f>()
-    val object_points = mutableListOf<Mat>()
-    var cameraMatrix = Mat()
-    var distCoeffs = Mat()
-    var rvecs = mutableListOf<Mat>()
-    var tvecs = mutableListOf<Mat>()
-    var captureCal = false
-    fun calibrate(gray: Mat) {
-        val SIZE_X = 6
-        val SIZE_Y = 9
-
-        val patternSize = Size(SIZE_X.toDouble(), SIZE_Y.toDouble())
-        var actual_corners = MatOfPoint2f()
-
-        val found_chess = Calib3d.findChessboardCorners(
-            gray,
-            patternSize,
-            actual_corners,
-            Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE
-        )
-
-
-        if (found_chess && captureCal) {
-            corners.add(actual_corners)
-//            Imgproc.cornerSubPix(gray, actual_corners,  Size(SIZE_Y*2+1.0,SIZE_X*2+1.0),  Size(-1.0,-1.0),  TermCriteria(TermCriteria.EPS+TermCriteria.MAX_ITER,30,0.1));
-            var points = MatOfPoint3f()
-            val a = MatOfPoint3f()
-            for (x in 0 until SIZE_X) {
-                for (y in 0 until SIZE_Y) {
-                    points = MatOfPoint3f(Point3(y.toDouble(), x.toDouble(), 0.0))
-                    a.push_back(points)
-                }
-            }
-            object_points.add(a)
-            Calib3d.calibrateCamera(
-                object_points,
-                corners.toList(),
-                gray.size(),
-                cameraMatrix,
-                distCoeffs,
-                rvecs,
-                tvecs
-            )
-            captureCal = false
-        }
-
-        Calib3d.drawChessboardCorners(gray, patternSize, actual_corners, found_chess)
-
-        var s = "frames:${corners.size},\n" +
-                "cameraMatrix:${cameraMatrix.dump()}\n" +
-                "distCoeffs:${distCoeffs.dump()}\n"
-        log(s)
-        Log.d(TAG, s)
-    }
-
-    private fun calculateCameraPosition(frame: Mat) {
-        markersList.filter { it.ID == 0 }.map { filteredMarker ->// draw path of marker 0
-            val x = 2.0 * filteredMarker.X
-            val y = 2.0 * filteredMarker.Y
-            a += 1
-
-            var c = Cartesian(x, y)
-            val p = c.toPolar()
-            p.rotate(filteredMarker.heading)
-            c = p.toCartesian()
-
-            val cam = Marker(null, 255, c.x, c.y, -filteredMarker.Z)
-            cam.heading = 2 * PI - filteredMarker.heading.addAngleRadians(PI / 2)
-
-            drawRobot(
-                frame,
-                cam.getCenterInWorld(frame.width() / 2, frame.height() / 2),
-                cam.heading
-            )
-
-            path.add(cam.getCenterInWorld(frame.width() / 2, frame.height() / 2))
-
-            filteredMarker.draw(rgb)
-            markersList.add(cam)
-        }
-    }
-
-    private fun drawPath(frame: Mat) {
-        if (path.isNotEmpty()) {
-            val matOfPoint = MatOfPoint()
-            matOfPoint.fromList(path)
-            val matOfPointList = arrayListOf(matOfPoint)
-
-            Imgproc.polylines(frame, matOfPointList, false, COLOR_RED, 2)
-            if (path.size > 5000) {
-                path.removeAt(0)
-            }
-        }
-    }
-
-    private fun drawRobot(frame: Mat, point: Point, heading: Double) {
-
-        Imgproc.circle(frame, point, 10, COLOR_GREEN, 2)
-        Imgproc.line(
-            frame,
-            point,
-            Point(point.x + 50 * sin(heading), point.y + 50 * cos(heading)),
-            COLOR_GREEN,
-            2
-        )
-    }
-
-    private fun drawCenterLines(frame: Mat) {
-        Imgproc.line(
-            frame,
-            Point(frame.width() / 2.0, 0.0),
-            Point(frame.width() / 2.0, frame.height().toDouble()),
-            COLOR_PINK,
-            1
-        )
-        Imgproc.line(
-            frame,
-            Point(0.0, frame.height() / 2.0),
-            Point(frame.width().toDouble(), frame.height() / 2.0),
-            COLOR_PINK,
-            1
-        )
     }
 
     private fun log(str: String) {
@@ -412,7 +260,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             binding.textView.text = s
         }
     }
-
 
     private fun disableCamera() {
         binding.cameraView.disableView()
@@ -446,15 +293,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
     companion object {
         private const val TAG = "ARUCO"
-
-        @Transient
-        val COLOR_PINK = Scalar(255.0, 0.0, 255.0)
-
-        @Transient
-        val COLOR_RED = Scalar(255.0, 0.0, 0.0)
-
-        @Transient
-        val COLOR_GREEN = Scalar(0.0, 255.0, 0.0)
     }
 }
 
