@@ -25,23 +25,31 @@ import org.opencv.core.Mat
 
 import org.opencv.core.Core
 import org.opencv.core.CvType
-import org.opencv.core.MatOfDouble
+import kotlin.math.asin
+import kotlin.math.atan2
 
 
 class Camera {
+    val filterXm = MovingAverage(10)
+    val filterYm = MovingAverage(10)
 
     fun calculateCameraPosition2(rvec: Mat, tvec: Mat): Marker {
+        val _1 = Scalar(-1.0)
+
         val R = Mat()
         Calib3d.Rodrigues(rvec, R)
+
+        val _R = Mat()
+        Core.multiply(R, _1, _R)
 
         val camR = R.t()
 
         val camRvec = Mat()
         Calib3d.Rodrigues(R, camRvec)
 
-        val scalar = Scalar(-1.0)
-        var _camR = Mat(1, 3, CvType.CV_64F)
-        Core.multiply(camR, scalar, _camR)
+
+        val _camR = Mat(1, 3, CvType.CV_64F)
+        Core.multiply(camR, _1, _camR)
 
 
         val tvec_conv = Mat(3, 1, CvType.CV_64F)
@@ -55,62 +63,36 @@ class Camera {
         tvec_conv.logMat("tvec_conv")
 
 
-        var camTvec = Mat(1, 3, CvType.CV_64F)
+        val camTvec = Mat(1, 3, CvType.CV_64F)
         Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
 
-//        val d = rvec.get(0,0)[0]
-//        Log.d("aaa", "double : $d")
-//        tvec_conv.put(0,0, arrayOf<Double>(tvec[0,0][0]))
-//        tvec_conv.put(0,1,2.0)
-//        tvec_conv.put(0,2,3.0)
-//
-//        _camR.convertTo(_camR, CvType.CV_64F)
-//
-//        logMat(tvec, "tvec")
-//        logMat(tvec_conv, "tvec_conv")
-//        logMat(_camR, "_camR")
-//        logMat(camR, "camR")
-//
-//        Core.multiply(tvec_conv, tvec_conv, camTvec)
-////        Core.gemm(_camR,tvec_conv , 1.0, Mat(), 0.0, camTvec, 0)
+        val bankX = atan2(_R.get(1, 2)[0], R.get(1, 1)[0])
+        val headingY = atan2(_R.get(2, 0)[0], R.get(0, 0)[0])
+        val attitudeZ = asin(R.get(1, 0)[0]).addAngleRadians(PI / 2).normalizeAngle()
 
 
         camTvec.logMat("camTvec")
         val marker = Marker(
             265,
-            x = camTvec[0, 0][0],
-            y =  camTvec[1, 0][0],
-            z =  camTvec[2, 0][0]
+            x = filterXm.add(camTvec[0, 0][0]),
+            y = filterYm.add(camTvec[1, 0][0]),
+            z = camTvec[2, 0][0],
+            heading = attitudeZ
         )
         return marker
     }
 
 
-//    Mat R;
-//    cv::Rodrigues(rvec, R); // calculate your object pose R matrix
-//
-//    camR = R.t();  // calculate your camera R matrix
-//
-//    Mat camRvec;
-//    Rodrigues(R, camRvec); // calculate your camera rvec
-//
-//    Mat camTvec= -camR * tvec; // calculate your camera translation vector
-
-    fun logMat(m: Mat, name: String) {
-        Log.d("aaa", "$name:${m.type()} -> ${m.dump()}")
-    }
-
     fun calculateCameraPosition(marker: Marker, frame: Mat): Marker {
-        val scale = 5 // scale to be able to draw, TODO change it
-        val x = marker.x / scale
-        val y = marker.y / scale
+        val x = marker.x
+        val y = marker.y
 
         var c = Cartesian(x, y)
         val p = c.toPolar()
         p.rotate(marker.heading)
         c = p.toCartesian()
 
-        val cam = Marker(255, c.x, c.y, -marker.z, null)
+        val cam = Marker(255, c.x, -c.y, marker.z, null)
         cam.heading = 2 * PI - marker.heading.addAngleRadians(PI / 2)
         return cam
     }

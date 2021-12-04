@@ -17,22 +17,35 @@
 
 package com.eziosoft.arucomqtt
 
-import android.util.Log
-import org.opencv.core.Mat
 
-fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDouble()
-fun Double.toRadian(): Double = this / 180 * Math.PI
-fun Double.toDegree(): Double = this * 180.0 / Math.PI
-fun Double.invertAngleRadians() = (this + Math.PI) % (2 * Math.PI)
-fun Double.addAngleRadians(angleRadians: Double) = (this + angleRadians) % (2 * Math.PI)
-fun Mat.logMat(name: String) {
-    Log.d("aaa", "$name:${this.type()} ${this.channels()} -> ${this.dump()}")
+class LowPassFilter {
+    private var oldX = 0.0
+
+    fun add(x: Double, alpha: Double = 0.7): Double {
+        oldX = alpha * oldX + (1.0 - alpha) * x
+        return oldX
+    }
 }
 
-private const val TWO_PI = 2 * Math.PI
+class MovingAverage(private val size: Int) {
+    private var total = 0.0
+    private var index = 0
+    private val samples: DoubleArray = DoubleArray(size)
+    fun add(x: Double): Double {
+        total -= samples[index]
+        samples[index] = x
+        total += x
+        if (++index == size) index = 0 // cheaper than modulus
 
-fun Double.normalizeAngle(): Double {
-    var normalized = this % TWO_PI
-    normalized = (normalized + TWO_PI) % TWO_PI
-    return if (normalized <= Math.PI) normalized else normalized - TWO_PI
+        return average
+    }
+
+    val average: Double
+        get() = total / size
+
+    init {
+        for (i in 0 until size) samples[i] = 0.0
+    }
 }
+
+

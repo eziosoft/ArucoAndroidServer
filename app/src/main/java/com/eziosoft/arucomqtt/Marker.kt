@@ -58,8 +58,7 @@ data class Marker(
     }
 
 
-    fun getPositionInWorldCoordinates(offsetX: Int = 0, offsetY: Int = 0) =
-        Point(x + offsetX, y + offsetY)
+
 
 
     private fun getMarkerHeadingInRadians(corners: Mat): Double {

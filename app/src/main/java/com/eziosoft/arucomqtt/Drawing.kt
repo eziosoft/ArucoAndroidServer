@@ -25,10 +25,18 @@ import org.opencv.imgproc.Imgproc
 import kotlin.math.cos
 import kotlin.math.sin
 
+const val SCALE_TO_DRAW = 5
 private val path = mutableListOf<Point>() //to draw a path
 
-fun Point.addToPath() {
-    path.add(this)
+fun Marker.addToPath(frame: Mat) {
+    val offsetX: Double = frame.width() / 2.0
+    val offsetY: Double = frame.height() / 2.0
+    path.add(
+        Point(
+            this.x / SCALE_TO_DRAW + offsetX,
+            this.y / SCALE_TO_DRAW + offsetY
+        )
+    )
 }
 
 fun drawPath(frame: Mat) {
@@ -44,12 +52,22 @@ fun drawPath(frame: Mat) {
     }
 }
 
-fun drawRobot(frame: Mat, point: Point, heading: Double, color:Scalar) {
-    Imgproc.circle(frame, point, 10, COLOR_GREEN, 2)
+fun drawRobot(frame: Mat, marker: Marker, color: Scalar) {
+    val offsetX: Double = frame.width() / 2.0
+    val offsetY: Double = frame.height() / 2.0
+
+    val p = Point(
+        marker.x / SCALE_TO_DRAW + offsetX,
+        marker.y / SCALE_TO_DRAW + offsetY
+    )
+    Imgproc.circle(frame, p, 10, color, 2)
     Imgproc.line(
         frame,
-        point,
-        Point(point.x + 50 * sin(heading), point.y + 50 * cos(heading)),
+        p,
+        Point(
+            p.x + 50 * sin(-marker.heading.invertAngleRadians()),
+            p.y + 50 * cos(-marker.heading.invertAngleRadians())
+        ),
         color,
         2
     )

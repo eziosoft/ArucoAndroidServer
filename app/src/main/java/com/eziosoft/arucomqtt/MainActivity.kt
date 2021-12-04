@@ -79,6 +79,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val rejected: MutableList<Mat> = ArrayList()
     private val markersList: MutableList<Marker> = ArrayList()
 
+    private val camera = Camera()
+
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
             if (status == SUCCESS) {
@@ -151,9 +153,11 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             return frame
 
         } else {
-            var cam1: Marker
+
+
             frame = inputFrame.rgba()
             cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
+
 
             allCorners.clear()
             rejected.clear()
@@ -169,6 +173,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 CAMERA_MATRIX,
                 CAMERA_DISTORTION
             )
+
+            drawPath(rgb)
 
             if (!ids.empty()) {
                 for (i in 0 until ids.rows()) { // for each marker
@@ -197,9 +203,13 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                     // Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
                     markersList.add(marker)
 
-                    cam1 = Camera().calculateCameraPosition2(rvec, tvec)
+                    val cam1 = camera.calculateCameraPosition2(rvec, tvec)
                     markersList.add(cam1)
-                    drawRobot(rgb, Point(cam1.x, cam1.y), 0.0, COLOR_PINK)
+                    drawRobot(
+                        rgb,
+                        cam1,
+                        COLOR_PINK
+                    )
                 }
             }
 
@@ -208,23 +218,19 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             }
 
             markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
-                val cam = Camera().calculateCameraPosition(filteredMarker, rgb)
+                val cam = camera.calculateCameraPosition(filteredMarker, rgb)
                 markersList.add(cam)
 
-                cam.getPositionInWorldCoordinates(
-                    frame.width() / 2,
-                    frame.height() / 2
-                ).addToPath()
+                cam.addToPath(rgb)
 
                 drawRobot(
                     rgb,
-                    cam.getPositionInWorldCoordinates(frame.width() / 2, frame.height() / 2),
-                    cam.heading,
+                    cam,
                     COLOR_GREEN
                 )
             }
 
-            drawPath(rgb)
+
             drawCenterLines(rgb)
 
             cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
