@@ -39,8 +39,8 @@ class Camera {
         val R = Mat()
         Calib3d.Rodrigues(rvec, R)
 
-        val _R = Mat()
-        Core.multiply(R, _1, _R)
+
+
 
         val camR = R.t()
 
@@ -66,8 +66,8 @@ class Camera {
         val camTvec = Mat(1, 3, CvType.CV_64F)
         Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
 
-        val bankX = atan2(_R.get(1, 2)[0], R.get(1, 1)[0])
-        val headingY = atan2(_R.get(2, 0)[0], R.get(0, 0)[0])
+        val bankX = atan2(-R.get(1, 2)[0], R.get(1, 1)[0])
+        val headingY = atan2(-R.get(2, 0)[0], R.get(0, 0)[0])
         val attitudeZ = asin(R.get(1, 0)[0]).addAngleRadians(PI / 2).normalizeAngle()
 
 
