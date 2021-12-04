@@ -20,6 +20,7 @@ package com.eziosoft.arucomqtt
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.Point
+import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 import kotlin.math.cos
 import kotlin.math.sin
@@ -43,13 +44,13 @@ fun drawPath(frame: Mat) {
     }
 }
 
-fun drawRobot(frame: Mat, point: Point, heading: Double) {
+fun drawRobot(frame: Mat, point: Point, heading: Double, color:Scalar) {
     Imgproc.circle(frame, point, 10, COLOR_GREEN, 2)
     Imgproc.line(
         frame,
         point,
         Point(point.x + 50 * sin(heading), point.y + 50 * cos(heading)),
-        COLOR_GREEN,
+        color,
         2
     )
 }

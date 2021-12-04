@@ -198,7 +198,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                     markersList.add(marker)
 
                     cam1 = Camera().calculateCameraPosition2(rvec, tvec)
-//                    markersList.add(cam1)
+                    markersList.add(cam1)
+                    drawRobot(rgb, Point(cam1.x, cam1.y), 0.0, COLOR_PINK)
                 }
             }
 
@@ -218,7 +219,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 drawRobot(
                     rgb,
                     cam.getPositionInWorldCoordinates(frame.width() / 2, frame.height() / 2),
-                    cam.heading
+                    cam.heading,
+                    COLOR_GREEN
                 )
             }
 

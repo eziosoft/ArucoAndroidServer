@@ -19,6 +19,7 @@ package com.eziosoft.arucomqtt
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
+import java.lang.Exception
 import kotlin.math.*
 
 data class Marker(
@@ -57,7 +58,8 @@ data class Marker(
     }
 
 
-    fun getPositionInWorldCoordinates(offsetX: Int = 0, offsetY: Int = 0) = Point(x + offsetX, y + offsetY)
+    fun getPositionInWorldCoordinates(offsetX: Int = 0, offsetY: Int = 0) =
+        Point(x + offsetX, y + offsetY)
 
 
     private fun getMarkerHeadingInRadians(corners: Mat): Double {
@@ -86,23 +88,25 @@ data class Marker(
     }
 
     fun draw(frame: Mat?) {
-        Imgproc.line(frame, markerCornersInPixels[0], markerCornersInPixels[1], c1, 3)
-        Imgproc.line(frame, markerCornersInPixels[1], markerCornersInPixels[2], c1, 3)
-        Imgproc.line(frame, markerCornersInPixels[2], markerCornersInPixels[3], c1, 3)
-        Imgproc.line(frame, markerCornersInPixels[3], markerCornersInPixels[0], c1, 3)
-        Imgproc.line(
-            frame,
-            centerInPixels,
-            Point(
-                centerInPixels.x + size * 2 / 2f * sin(heading),
-                centerInPixels.y + size * 2 / 2f * cos(heading)
-            ),
-            c2,
-            5
-        )
-        Imgproc.putText(frame, toString(), centerInPixels, 1, 1.0, c1)
+        try {
+            Imgproc.line(frame, markerCornersInPixels[0], markerCornersInPixels[1], c1, 3)
+            Imgproc.line(frame, markerCornersInPixels[1], markerCornersInPixels[2], c1, 3)
+            Imgproc.line(frame, markerCornersInPixels[2], markerCornersInPixels[3], c1, 3)
+            Imgproc.line(frame, markerCornersInPixels[3], markerCornersInPixels[0], c1, 3)
+            Imgproc.line(
+                frame,
+                centerInPixels,
+                Point(
+                    centerInPixels.x + size * 2 / 2f * sin(heading),
+                    centerInPixels.y + size * 2 / 2f * cos(heading)
+                ),
+                c2,
+                5
+            )
+            Imgproc.putText(frame, toString(), centerInPixels, 1, 1.0, c1)
+        } catch (e: Exception) {
+        }
     }
-
 
 
 }

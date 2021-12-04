@@ -31,7 +31,7 @@ import org.opencv.core.MatOfDouble
 class Camera {
 
     fun calculateCameraPosition2(rvec: Mat, tvec: Mat): Marker {
-        val R = Mat(3, 3, CvType.CV_64F)
+        val R = Mat()
         Calib3d.Rodrigues(rvec, R)
 
         val camR = R.t()
@@ -40,40 +40,61 @@ class Camera {
         Calib3d.Rodrigues(R, camRvec)
 
         val scalar = Scalar(-1.0)
-        var _camR = Mat(1,3,CvType.CV_64F)
+        var _camR = Mat(1, 3, CvType.CV_64F)
         Core.multiply(camR, scalar, _camR)
 
 
-        var camTvec = Mat(1,3,CvType.CV_64F)
+        val tvec_conv = Mat(3, 1, CvType.CV_64F)
+        tvec_conv.put(0, 0, (tvec[0, 0][0]))
+        tvec_conv.put(1, 0, (tvec[0, 0][1]))
+        tvec_conv.put(2, 0, (tvec[0, 0][2]))
 
 
-        val tvec_conv=Mat(1,3,CvType.CV_64F)
-        val d = rvec.get(0,0)[0]
-        Log.d("aaa", "double : $d")
-        tvec_conv.put(0,0,1.0)
-        tvec_conv.put(0,1,2.0)
-        tvec_conv.put(0,2,3.0)
-
-        _camR.convertTo(_camR, CvType.CV_64F)
-
-        logMat(tvec, "tvec")
-        logMat(tvec_conv, "tvec_conv")
-        logMat(_camR, "_camR")
-        logMat(camR, "camR")
-
-        Core.multiply(tvec_conv, tvec_conv, camTvec)
-//        Core.gemm(_camR,tvec_conv , 1.0, Mat(), 0.0, camTvec, 0)
+        _camR.logMat("_camR")
+        tvec.logMat("tvec")
+        tvec_conv.logMat("tvec_conv")
 
 
+        var camTvec = Mat(1, 3, CvType.CV_64F)
+        Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
+
+//        val d = rvec.get(0,0)[0]
+//        Log.d("aaa", "double : $d")
+//        tvec_conv.put(0,0, arrayOf<Double>(tvec[0,0][0]))
+//        tvec_conv.put(0,1,2.0)
+//        tvec_conv.put(0,2,3.0)
+//
+//        _camR.convertTo(_camR, CvType.CV_64F)
+//
+//        logMat(tvec, "tvec")
+//        logMat(tvec_conv, "tvec_conv")
+//        logMat(_camR, "_camR")
+//        logMat(camR, "camR")
+//
+//        Core.multiply(tvec_conv, tvec_conv, camTvec)
+////        Core.gemm(_camR,tvec_conv , 1.0, Mat(), 0.0, camTvec, 0)
+
+
+        camTvec.logMat("camTvec")
         val marker = Marker(
             265,
-            x = 0.0,//camTvec[0, 0][0],
-            y = 0.0,// camTvec[0, 0][1],
-            z = 0.0// camTvec[0, 0][2]
+            x = camTvec[0, 0][0],
+            y =  camTvec[1, 0][0],
+            z =  camTvec[2, 0][0]
         )
         return marker
     }
 
+
+//    Mat R;
+//    cv::Rodrigues(rvec, R); // calculate your object pose R matrix
+//
+//    camR = R.t();  // calculate your camera R matrix
+//
+//    Mat camRvec;
+//    Rodrigues(R, camRvec); // calculate your camera rvec
+//
+//    Mat camTvec= -camR * tvec; // calculate your camera translation vector
 
     fun logMat(m: Mat, name: String) {
         Log.d("aaa", "$name:${m.type()} -> ${m.dump()}")
