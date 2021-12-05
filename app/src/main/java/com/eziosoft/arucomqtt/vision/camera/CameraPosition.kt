@@ -32,14 +32,14 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.camera
+package com.eziosoft.arucomqtt.vision.camera
 
 import com.eziosoft.arucomqtt.Cartesian
-import com.eziosoft.arucomqtt.Marker
+import com.eziosoft.arucomqtt.vision.Marker
 import com.eziosoft.arucomqtt.MovingAverageFilter
-import com.eziosoft.arucomqtt.extensions.addAngleRadians
-import com.eziosoft.arucomqtt.extensions.logMat
-import com.eziosoft.arucomqtt.extensions.normalizeAngle
+import com.eziosoft.arucomqtt.helpers.filters.extensions.addAngleRadians
+import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
+import com.eziosoft.arucomqtt.helpers.filters.extensions.normalizeAngle
 import org.opencv.calib3d.Calib3d
 import org.opencv.core.*
 import kotlin.math.PI
@@ -47,7 +47,6 @@ import org.opencv.core.Mat
 
 import org.opencv.core.Core
 import org.opencv.core.CvType
-import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.sqrt
 

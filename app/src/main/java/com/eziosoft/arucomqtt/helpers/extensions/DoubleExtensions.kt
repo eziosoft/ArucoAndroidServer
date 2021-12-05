@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.extensions
+package com.eziosoft.arucomqtt.helpers.filters.extensions
 
 
 private const val TWO_PI = 2 * Math.PI

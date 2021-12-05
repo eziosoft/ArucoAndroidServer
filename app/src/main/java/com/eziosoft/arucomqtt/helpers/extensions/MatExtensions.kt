@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.extensions
+package com.eziosoft.arucomqtt.helpers.filters.extensions
 
 import android.util.Log
 import org.opencv.core.Mat

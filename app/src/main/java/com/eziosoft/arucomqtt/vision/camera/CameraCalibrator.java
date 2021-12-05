@@ -32,7 +32,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.camera;
+package com.eziosoft.arucomqtt.vision.camera;
 
 
 import java.util.ArrayList;

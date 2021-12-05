@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.camera
+package com.eziosoft.arucomqtt.vision.camera
 
 import org.opencv.core.CvType
 import org.opencv.core.Mat

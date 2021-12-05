@@ -14,10 +14,29 @@
  *     You should have received a copy of the GNU General Public License
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.eziosoft.arucomqtt
 
-import com.eziosoft.arucomqtt.extensions.round
-import com.eziosoft.arucomqtt.extensions.toDegree
+/*
+ *     This file is part of ArucoAndroidServer.
+ *
+ *     ArucoAndroidServer is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     Foobar is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package com.eziosoft.arucomqtt.vision
+
+import com.eziosoft.arucomqtt.c1
+import com.eziosoft.arucomqtt.c2
+import com.eziosoft.arucomqtt.helpers.filters.extensions.round
+import com.eziosoft.arucomqtt.helpers.filters.extensions.toDegree
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
