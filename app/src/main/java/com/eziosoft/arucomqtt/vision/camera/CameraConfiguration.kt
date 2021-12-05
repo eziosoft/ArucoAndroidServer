@@ -17,40 +17,55 @@
 
 package com.eziosoft.arucomqtt.vision.camera
 
+import org.opencv.aruco.Aruco
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 
 class CameraConfiguration {
     companion object {
+        val DICTIONARY = Aruco.getPredefinedDictionary(Aruco.DICT_4X4_100)
+        const val MARKER_LENGTH = 170F //170mm
+
         const val CAMERA_FRONT = 98
         const val CAMERA_BACK = 99
-        const val CAMERA_WIDTH = 720
-        const val CAMERA_HEIGH = 480
+        const val CAMERA_WIDTH = 5000
+        const val CAMERA_HEIGH = 5000
 
         val CAMERA_MATRIX: Mat = Mat(3, 3, CvType.CV_32F)
         val CAMERA_DISTORTION: Mat = Mat(1, 5, CvType.CV_32F)
 
         init {
-            CAMERA_MATRIX.put(0, 0, 565.5056849747607)
+            CAMERA_MATRIX.put(0, 0, 5268.43709044987)
             CAMERA_MATRIX.put(0, 1, 0.0)
-            CAMERA_MATRIX.put(0, 2, 360.0)
+            CAMERA_MATRIX.put(0, 2, 2500.0)
 
             CAMERA_MATRIX.put(1, 0, 0.0)
-            CAMERA_MATRIX.put(1, 1, 565.5056849747607)
-            CAMERA_MATRIX.put(1, 2, 240.0)
+            CAMERA_MATRIX.put(1, 1, 5268.43709044987)
+            CAMERA_MATRIX.put(1, 2, 2500.0)
 
             CAMERA_MATRIX.put(2, 0, 0.0)
             CAMERA_MATRIX.put(2, 1, 0.0)
             CAMERA_MATRIX.put(2, 2, 1.0)
 
-            CAMERA_DISTORTION.put(0, 0, 0.08913809371204115)
-            CAMERA_DISTORTION.put(0, 1, -0.1701755981832315)
+            CAMERA_DISTORTION.put(0, 0, -0.02760448001725332)
+            CAMERA_DISTORTION.put(0, 1, -0.01766635665405676)
             CAMERA_DISTORTION.put(0, 2, 0.0)
             CAMERA_DISTORTION.put(0, 3, 0.0)
             CAMERA_DISTORTION.put(0, 4, 0.0)
         }
     }
 }
+//front
+//Average re-projection error: 1.201289
+//I/OCV::CameraCalibrator: Camera matrix: [5268.43709044987, 0, 2500;
+//0, 5268.43709044987, 2500;
+//0, 0, 1]
+//I/OCV::CameraCalibrator: Distortion coefficients: [-0.02760448001725332;
+//-0.01766635665405676;
+//0;
+//0;
+//0]
+//D/FpsMeter: 8.19 FPS@1280x720
 
 //oneplus 5t back camera
 //    I/OCV::CameraCalibrator: Average re-projection error: 0.428173

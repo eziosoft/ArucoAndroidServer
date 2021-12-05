@@ -43,6 +43,8 @@ import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.CAMERA
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.CAMERA_WIDTH
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.vision.Marker
+import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.DICTIONARY
+import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.MARKER_LENGTH
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -57,21 +59,10 @@ import kotlin.math.*
 
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private lateinit var binding: ActivityMainBinding
-
-
-    private val DICTIONARY = Aruco.getPredefinedDictionary(Aruco.DICT_4X4_100)
-
-
-    private val MARKER_LENGTH = 170F //170mm
-
-
-    var a = 0.0
-
     val cameraCalibrator = CameraCalibrator(
         CAMERA_WIDTH,
         CAMERA_HEIGH
     )
-
     var captureCalibrationFrame = false
     var calibrate = false
 
