@@ -129,9 +129,9 @@ data class Marker(
                 "\tH${heading.toDegree().roundToInt()}"
 
         if (rotation != null) {
-            s += "\nrX${rotation?.x?.toDegree().roundToInt()}" +
-                    "\nrY${rotation?.y?.toDegree().roundToInt()}" +
-                    "\nrZ${rotation?.z?.toDegree().roundToInt()}"
+            s += "\nrX${rotation.x.toDegree().roundToInt()}" +
+                    "\nrY${rotation.y.toDegree().roundToInt()}" +
+                    "\nrZ${rotation.z.toDegree().roundToInt()}"
         }
         return s
     }
