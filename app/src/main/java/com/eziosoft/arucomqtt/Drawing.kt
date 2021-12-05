@@ -17,6 +17,7 @@
 
 package com.eziosoft.arucomqtt
 
+import com.eziosoft.arucomqtt.extensions.invertAngleRadians
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.Point

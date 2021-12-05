@@ -15,89 +15,12 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt
+package com.eziosoft.arucomqtt.camera
 
-import android.util.Log
-import org.opencv.calib3d.Calib3d
-import org.opencv.core.*
-import kotlin.math.PI
+import org.opencv.core.CvType
 import org.opencv.core.Mat
 
-import org.opencv.core.Core
-import org.opencv.core.CvType
-import kotlin.math.asin
-import kotlin.math.atan2
-
-
-class Camera {
-    val filterXm = MovingAverage(10)
-    val filterYm = MovingAverage(10)
-
-    fun calculateCameraPosition2(rvec: Mat, tvec: Mat): Marker {
-        val _1 = Scalar(-1.0)
-
-        val R = Mat()
-        Calib3d.Rodrigues(rvec, R)
-
-
-
-
-        val camR = R.t()
-
-        val camRvec = Mat()
-        Calib3d.Rodrigues(R, camRvec)
-
-
-        val _camR = Mat(1, 3, CvType.CV_64F)
-        Core.multiply(camR, _1, _camR)
-
-
-        val tvec_conv = Mat(3, 1, CvType.CV_64F)
-        tvec_conv.put(0, 0, (tvec[0, 0][0]))
-        tvec_conv.put(1, 0, (tvec[0, 0][1]))
-        tvec_conv.put(2, 0, (tvec[0, 0][2]))
-
-
-        _camR.logMat("_camR")
-        tvec.logMat("tvec")
-        tvec_conv.logMat("tvec_conv")
-
-
-        val camTvec = Mat(1, 3, CvType.CV_64F)
-        Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
-
-        val bankX = atan2(-R.get(1, 2)[0], R.get(1, 1)[0])
-        val headingY = atan2(-R.get(2, 0)[0], R.get(0, 0)[0])
-        val attitudeZ = asin(R.get(1, 0)[0]).addAngleRadians(PI / 2).normalizeAngle()
-
-
-        camTvec.logMat("camTvec")
-        val marker = Marker(
-            265,
-            x = filterXm.add(camTvec[0, 0][0]),
-            y = filterYm.add(camTvec[1, 0][0]),
-            z = camTvec[2, 0][0],
-            heading = attitudeZ
-        )
-        return marker
-    }
-
-
-    fun calculateCameraPosition(marker: Marker, frame: Mat): Marker {
-        val x = marker.x
-        val y = marker.y
-
-        var c = Cartesian(x, y)
-        val p = c.toPolar()
-        p.rotate(marker.heading)
-        c = p.toCartesian()
-
-        val cam = Marker(255, c.x, -c.y, marker.z, null)
-        cam.heading = 2 * PI - marker.heading.addAngleRadians(PI / 2)
-        return cam
-    }
-
-
+class CameraConfiguration {
     companion object {
         const val CAMERA_FRONT = 98
         const val CAMERA_BACK = 99

@@ -16,6 +16,8 @@
  */
 package com.eziosoft.arucomqtt
 
+import com.eziosoft.arucomqtt.extensions.round
+import com.eziosoft.arucomqtt.extensions.toDegree
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
@@ -28,42 +30,26 @@ data class Marker(
     val y: Double,
     val z: Double,
     val corners: Mat? = null,
-    var centerInPixels: Point = Point(0.0, 0.0),
-    var heading: Double = 0.0
+    var heading: Double = 0.0,
+    val rotation: Rotation? = null,
+    val rvec: Mat? = null,
+    val tvec: Mat? = null
 ) {
 
-    private var size: Int = 0
+    data class Rotation(val x: Double, val y: Double, val z: Double)
+
     private val markerCornersInPixels = arrayOfNulls<Point>(4)
+    private lateinit var centerInPixels: Point
 
 
     init {
         corners?.let {
-            centerInPixels = getMarkerCenterInPixels(corners)
-            heading = getMarkerHeadingInRadians(corners)
+            centerInPixels = getMarkerCenterInPixels(it)
             for (i in 0..3) {
-                markerCornersInPixels[i] = Point(corners[0, i][0], corners[0, i][1])
+                markerCornersInPixels[i] = Point(it[0, i][0], it[0, i][1])
             }
-            size = sqrt(
-                (markerCornersInPixels[0]!!.x - markerCornersInPixels[1]!!.x).pow(2.0) +
-                        (markerCornersInPixels[0]!!.y - markerCornersInPixels[1]!!.y).pow(2.0)
-            ).toInt()
+            heading = getHeadingAngleFromPixels(it)
         }
-    }
-
-
-    override fun toString(): String {
-        return "$id--X${x.round(2)} Y${y.round(2)} Z${z.round(2)} H${heading.round(2)}(${
-            heading.toDegree().roundToInt()
-        })"
-    }
-
-
-
-
-
-    private fun getMarkerHeadingInRadians(corners: Mat): Double {
-        val up = getMarkerFront(corners)
-        return atan2(up.x - centerInPixels.x, up.y - centerInPixels.y)
     }
 
     private fun getMarkerCenterInPixels(corners: Mat): Point {
@@ -76,6 +62,11 @@ data class Marker(
         return Point(x / 4, y / 4)
     }
 
+    private fun getHeadingAngleFromPixels(corners: Mat): Double {
+        val up = getMarkerFront(corners)
+        return atan2(up.x - centerInPixels.x, up.y - centerInPixels.y)
+    }
+
     private fun getMarkerFront(corners: Mat): Point {
         var x = 0.0
         var y = 0.0
@@ -85,6 +76,12 @@ data class Marker(
         }
         return Point(x / 2, y / 2)
     }
+
+    private fun getMarkerSize() = sqrt(
+        (markerCornersInPixels[0]!!.x - markerCornersInPixels[1]!!.x).pow(2.0) +
+                (markerCornersInPixels[0]!!.y - markerCornersInPixels[1]!!.y).pow(2.0)
+    )
+
 
     fun draw(frame: Mat?) {
         try {
@@ -96,8 +93,8 @@ data class Marker(
                 frame,
                 centerInPixels,
                 Point(
-                    centerInPixels.x + size * 2 / 2f * sin(heading),
-                    centerInPixels.y + size * 2 / 2f * cos(heading)
+                    centerInPixels.x + getMarkerSize() * 2 / 2f * sin(heading),
+                    centerInPixels.y + getMarkerSize() * 2 / 2f * cos(heading)
                 ),
                 c2,
                 5
@@ -107,7 +104,11 @@ data class Marker(
         }
     }
 
-
+    override fun toString(): String {
+        return "$id--X${x.round(2)} Y${y.round(2)} Z${z.round(2)} H${heading.round(2)}(${
+            heading.toDegree().roundToInt()
+        })"
+    }
 }
 
 

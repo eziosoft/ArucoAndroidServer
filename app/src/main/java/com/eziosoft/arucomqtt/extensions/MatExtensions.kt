@@ -15,24 +15,11 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt
+package com.eziosoft.arucomqtt.extensions
 
 import android.util.Log
 import org.opencv.core.Mat
 
-fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDouble()
-fun Double.toRadian(): Double = this / 180 * Math.PI
-fun Double.toDegree(): Double = this * 180.0 / Math.PI
-fun Double.invertAngleRadians() = (this + Math.PI) % (2 * Math.PI)
-fun Double.addAngleRadians(angleRadians: Double) = (this + angleRadians) % (2 * Math.PI)
 fun Mat.logMat(name: String) {
     Log.d("aaa", "$name:${this.type()} ${this.channels()} -> ${this.dump()}")
-}
-
-private const val TWO_PI = 2 * Math.PI
-
-fun Double.normalizeAngle(): Double {
-    var normalized = this % TWO_PI
-    normalized = (normalized + TWO_PI) % TWO_PI
-    return if (normalized <= Math.PI) normalized else normalized - TWO_PI
 }

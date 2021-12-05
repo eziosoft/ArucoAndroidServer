@@ -34,11 +34,13 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
-import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_DISTORTION
-import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_FRONT
-import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_HEIGH
-import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_MATRIX
-import com.eziosoft.arucomqtt.Camera.Companion.CAMERA_WIDTH
+import com.eziosoft.arucomqtt.camera.CameraPosition
+import com.eziosoft.arucomqtt.camera.CameraCalibrator
+import com.eziosoft.arucomqtt.camera.CameraConfiguration.Companion.CAMERA_DISTORTION
+import com.eziosoft.arucomqtt.camera.CameraConfiguration.Companion.CAMERA_FRONT
+import com.eziosoft.arucomqtt.camera.CameraConfiguration.Companion.CAMERA_HEIGH
+import com.eziosoft.arucomqtt.camera.CameraConfiguration.Companion.CAMERA_MATRIX
+import com.eziosoft.arucomqtt.camera.CameraConfiguration.Companion.CAMERA_WIDTH
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,7 +66,10 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
     var a = 0.0
 
-    val cameraCalibrator = CameraCalibrator(CAMERA_WIDTH, CAMERA_HEIGH)
+    val cameraCalibrator = CameraCalibrator(
+        CAMERA_WIDTH,
+        CAMERA_HEIGH
+    )
 
     var captureCalibrationFrame = false
     var calibrate = false
@@ -79,7 +84,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val rejected: MutableList<Mat> = ArrayList()
     private val markersList: MutableList<Marker> = ArrayList()
 
-    private val camera = Camera()
+    private val camera = CameraPosition()
 
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
@@ -193,44 +198,21 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                     )
 
                     val marker = Marker(
-                        id,
+                        id = id,
                         x = tvec[0, 0][0],
                         y = tvec[0, 0][1],
                         z = tvec[0, 0][2],
-                        markerCorners
+                        corners = markerCorners,
+                        rvec = rvec,
+                        tvec = tvec
                     )
 
                     // Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
                     markersList.add(marker)
-
-                    val cam1 = camera.calculateCameraPosition2(rvec, tvec)
-                    markersList.add(cam1)
-                    drawRobot(
-                        rgb,
-                        cam1,
-                        COLOR_PINK
-                    )
                 }
             }
 
-            markersList.map {
-                it.draw(rgb)
-            }
-
-            markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
-                val cam = camera.calculateCameraPosition(filteredMarker, rgb)
-                markersList.add(cam)
-
-                cam.addToPath(rgb)
-
-                drawRobot(
-                    rgb,
-                    cam,
-                    COLOR_GREEN
-                )
-            }
-
-
+            processMarkers(rgb)
             drawCenterLines(rgb)
 
             cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
@@ -248,6 +230,35 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             m
         } else {
             frame
+        }
+    }
+
+    private fun drawAllMarkers() {
+        markersList.map {
+            it.draw(rgb)
+        }
+    }
+
+    private fun processMarkers(frame:Mat) {
+        markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
+           filteredMarker.draw(frame)
+
+            val cam = camera.calculateCameraPosition(filteredMarker, rgb)
+            markersList.add(cam)
+            cam.addToPath(rgb)
+            drawRobot(
+                rgb,
+                cam,
+                COLOR_GREEN
+            )
+
+            val cam1 = camera.calculateCameraPosition2(filteredMarker)
+            markersList.add(cam1)
+            drawRobot(
+                rgb,
+                cam1,
+                COLOR_PINK
+            )
         }
     }
 

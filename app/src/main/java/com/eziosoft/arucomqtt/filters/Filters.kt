@@ -15,19 +15,36 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+/*
+ *     This file is part of ArucoAndroidServer.
+ *
+ *     ArucoAndroidServer is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     Foobar is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.eziosoft.arucomqtt
 
 
-class LowPassFilter {
+class LowPassFilter(private val alpha: Double = 0.7) {
     private var oldX = 0.0
 
-    fun add(x: Double, alpha: Double = 0.7): Double {
+    fun add(x: Double): Double {
         oldX = alpha * oldX + (1.0 - alpha) * x
         return oldX
     }
 }
 
-class MovingAverage(private val size: Int) {
+class MovingAverageFilter(private val size: Int) {
     private var total = 0.0
     private var index = 0
     private val samples: DoubleArray = DoubleArray(size)
@@ -47,5 +64,20 @@ class MovingAverage(private val size: Int) {
         for (i in 0 until size) samples[i] = 0.0
     }
 }
+
+//class MovingAverageMarkerPositionFilter(size: Int) {
+//    private val filterX = MovingAverageFilter(size)
+//    private val filterY = MovingAverageFilter(size)
+//    private val filterZ = MovingAverageFilter(size)
+//
+//    fun add(marker: Marker): Marker {
+//        return Marker(
+//            filterX.add(marker.x),
+//            filterY.add(marker.y),
+//            filterZ.add(marker.z),
+//        )
+//    }
+//
+//}
 
 
