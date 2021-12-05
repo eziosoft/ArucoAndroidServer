@@ -15,26 +15,13 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*
- *     This file is part of ArucoAndroidServer.
- *
- *     ArucoAndroidServer is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *
- *     Foobar is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
- */
+
 package com.eziosoft.arucomqtt.vision
 
 import com.eziosoft.arucomqtt.c1
 import com.eziosoft.arucomqtt.c2
+import com.eziosoft.arucomqtt.helpers.filters.extensions.addAngleRadians
+import com.eziosoft.arucomqtt.helpers.filters.extensions.normalizeAngle
 import com.eziosoft.arucomqtt.helpers.filters.extensions.round
 import com.eziosoft.arucomqtt.helpers.filters.extensions.toDegree
 import org.opencv.core.Mat
@@ -55,20 +42,34 @@ data class Marker(
     val tvec: Mat? = null
 ) {
 
-    data class Rotation(val x: Double, val y: Double, val z: Double)
+    data class Rotation(var x: Double, var y: Double, var z: Double) {
+        fun offsetX(angleRad: Double) {
+            x = x.addAngleRadians(angleRad).normalizeAngle()
+        }
+
+        fun offsetY(angleRad: Double) {
+            y = y.addAngleRadians(angleRad).normalizeAngle()
+        }
+
+        fun offsetZ(angleRad: Double) {
+            z = z.addAngleRadians(angleRad).normalizeAngle()
+        }
+    }
 
     private val markerCornersInPixels = arrayOfNulls<Point>(4)
     private lateinit var centerInPixels: Point
 
 
     init {
+        heading = rotation?.z ?: 0.0
         corners?.let {
             centerInPixels = getMarkerCenterInPixels(it)
             for (i in 0..3) {
                 markerCornersInPixels[i] = Point(it[0, i][0], it[0, i][1])
             }
-            heading = getHeadingAngleFromPixels(it)
+            heading = rotation?.z ?: getHeadingAngleFromPixels(it)
         }
+
     }
 
     private fun getMarkerCenterInPixels(corners: Mat): Point {
@@ -124,9 +125,15 @@ data class Marker(
     }
 
     override fun toString(): String {
-        return "$id--X${x.round(2)} Y${y.round(2)} Z${z.round(2)} H${heading.round(2)}(${
-            heading.toDegree().roundToInt()
-        })"
+        var s = "$id--X${x.round(2)} \tY${y.round(2)} \tZ${z.round(2)} " +
+                "\tH${heading.toDegree().roundToInt()}"
+
+        if (rotation != null) {
+            s += "\nrX${rotation?.x?.toDegree().roundToInt()}" +
+                    "\nrY${rotation?.y?.toDegree().roundToInt()}" +
+                    "\nrZ${rotation?.z?.toDegree().roundToInt()}"
+        }
+        return s
     }
 }
 

@@ -17,8 +17,11 @@
 
 package com.eziosoft.arucomqtt.helpers.filters.extensions
 
+import kotlin.math.PI
 
-private const val TWO_PI = 2 * Math.PI
+
+const val TWO_PI = 2 * PI
+const val PI_2 = PI / 2
 
 fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDouble()
 fun Double.toRadian(): Double = this / 180 * Math.PI

@@ -37,6 +37,7 @@ package com.eziosoft.arucomqtt.vision.camera
 import com.eziosoft.arucomqtt.Cartesian
 import com.eziosoft.arucomqtt.vision.Marker
 import com.eziosoft.arucomqtt.MovingAverageFilter
+import com.eziosoft.arucomqtt.helpers.filters.extensions.PI_2
 import com.eziosoft.arucomqtt.helpers.filters.extensions.addAngleRadians
 import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
 import com.eziosoft.arucomqtt.helpers.filters.extensions.normalizeAngle
@@ -52,47 +53,9 @@ import kotlin.math.sqrt
 
 
 class CameraPosition {
-    private val filterX = MovingAverageFilter(10)
-    private val filterY = MovingAverageFilter(10)
-    private val filterZ = MovingAverageFilter(10)
-
-    fun calculateCameraPosition3(rvec: Mat, tvec: Mat): Marker {
-//        #-- Obtain the rotation matrix tag->camera
-//        R_ct    = np.matrix(cv2.Rodrigues(rvec)[0])
-//        R_tc    = R_ct.T
-
-        val R_ct = Mat(3, 3, CvType.CV_64F)
-        val R_tc = R_ct.t()
-
-        val _1 = Scalar(-1.0)
-        val _R_tc = Mat()
-        Core.multiply(R_tc, _1, _R_tc)
-
-        val tvec_conv = Mat(3, 1, CvType.CV_64F)
-        tvec_conv.put(0, 0, (tvec.t()[0, 0][0]))
-        tvec_conv.put(1, 0, (tvec.t()[0, 0][1]))
-        tvec_conv.put(2, 0, (tvec.t()[0, 0][2]))
-        val pos_camera = Mat()
-
-        _R_tc.logMat("_R_tc")
-        tvec_conv.logMat("tvec_conv")
-        tvec.logMat("tvec")
-        tvec_conv.t().logMat("tvec_conv.t")
-
-        Core.gemm(_R_tc, tvec_conv, 1.0, Mat(), 0.0, pos_camera, 0)
-//        pos_camera = -R_tc*np.matrix(tvec).T
-
-        pos_camera.logMat("poscamera")
-
-        val marker = Marker(
-            266,
-            x = filterX.add(pos_camera[0, 0][0]),
-            y = filterY.add(pos_camera[1, 0][0]),
-            z = filterZ.add(pos_camera[2, 0][0]),
-            heading = 0.0
-        )
-        return marker
-    }
+    private val filterX = MovingAverageFilter(15)
+    private val filterY = MovingAverageFilter(15)
+    private val filterZ = MovingAverageFilter(15)
 
     fun calculateCameraPosition2(cam: Marker): Marker {
         val R = Mat(3, 3, CvType.CV_32FC1)
@@ -113,21 +76,17 @@ class CameraPosition {
         val camTvec = Mat(1, 3, CvType.CV_64F)
         Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
 
-
-//        val bankX = atan2(-camR.get(1, 2)[0], R.get(1, 1)[0])
-//        val headingY = atan2(-camR.get(2, 0)[0], R.get(0, 0)[0])
-//        val attitudeZ = asin(camR.get(1, 0)[0]).addAngleRadians(PI / 2).normalizeAngle()
-
         val rotationCam = rotationMatrixToEulerAngles(camR)
-
+        rotationCam.offsetZ(PI_2)
 
         val marker = Marker(
             265,
             x = filterX.add(camTvec[0, 0][0]),
             y = filterY.add(camTvec[1, 0][0]),
             z = filterZ.add(camTvec[2, 0][0]),
-            heading = rotationCam.z.addAngleRadians(PI / 2).normalizeAngle()
+            rotation = rotationCam
         )
+
         camTvec.release()
         camR.release()
         _camR.release()
@@ -151,24 +110,6 @@ class CameraPosition {
         return cam
     }
 
-
-//    def rotationMatrixToEulerAngles(R):
-//    assert (isRotationMatrix(R))
-//
-//    sy = math.sqrt(R[0, 0] * R[0, 0] + R[1, 0] * R[1, 0])
-//
-//    singular = sy < 1e-6
-//
-//    if not singular:
-//    x = math.atan2(R[2, 1], R[2, 2])
-//    y = math.atan2(-R[2, 0], sy)
-//    z = math.atan2(R[1, 0], R[0, 0])
-//    else:
-//    x = math.atan2(-R[1, 2], R[1, 1])
-//    y = math.atan2(-R[2, 0], sy)
-//    z = 0
-//
-//    return np.array([x, y, z])
 
     private fun rotationMatrixToEulerAngles(R: Mat): Marker.Rotation {
         val sy = sqrt(R[0, 0][0] * R[0, 0][0] + R[1, 0][0] * R[1, 0][0])
