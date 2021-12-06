@@ -17,9 +17,10 @@
 
 package com.eziosoft.arucomqtt.mqtt
 
-package com.netguru.moodshareapp
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
@@ -30,7 +31,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.function.Consumer
 
-class MQTT {
+@RequiresApi(Build.VERSION_CODES.N)
+class Mqtt {
     data class MqttMessage(val message: ByteArray, val topic: String)
 
     private val TAG = "MQTT_CLIENT"
@@ -45,6 +47,7 @@ class MQTT {
         else
             false
     }
+
 
     fun publishMessage(
         message: String?,

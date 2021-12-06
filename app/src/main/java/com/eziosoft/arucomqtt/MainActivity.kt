@@ -42,6 +42,7 @@ import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.CAMERA
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.CAMERA_MATRIX
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.CAMERA_WIDTH
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
+import com.eziosoft.arucomqtt.mqtt.Mqtt
 import com.eziosoft.arucomqtt.vision.Marker
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.DICTIONARY
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.MARKER_LENGTH
@@ -96,6 +97,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             }
         }
     }
+
+    private val mqtt by lazy { Mqtt() }
 
 
     public override fun onCreate(savedInstanceState: Bundle?) {
