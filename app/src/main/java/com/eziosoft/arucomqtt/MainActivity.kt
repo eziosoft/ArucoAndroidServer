@@ -43,11 +43,15 @@ import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.CAMERA
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.CAMERA_WIDTH
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.mqtt.Mqtt
+import com.eziosoft.arucomqtt.phoneAttitude.DeviceAttitudeProvider
 import com.eziosoft.arucomqtt.vision.Marker
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.DICTIONARY
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.MARKER_LENGTH
+import com.eziosoft.arucomqtt.vision.map.Map
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import org.opencv.core.*
 import org.opencv.core.CvType.CV_32FC1
@@ -55,10 +59,13 @@ import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.cvtColor
 
 import java.util.*
+import javax.inject.Inject
 import kotlin.math.*
 
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
+
     private lateinit var binding: ActivityMainBinding
     val cameraCalibrator = CameraCalibrator(
         CAMERA_WIDTH,
@@ -77,7 +84,10 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val rejected: MutableList<Mat> = ArrayList()
     private val markersList: MutableList<Marker> = ArrayList()
 
-    private val camera = CameraPosition()
+    @Inject
+    lateinit var camera: CameraPosition
+
+    private val map = Map()
 
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
@@ -97,8 +107,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             }
         }
     }
-
-    private val mqtt by lazy { Mqtt() }
 
 
     public override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,6 +131,14 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         binding.calB.setOnCheckedChangeListener { _, checked ->
             binding.captureB.isVisible = checked
             calibrate = checked
+        }
+
+        binding.mapB.setOnClickListener {
+            map.addPoint(camera.getLastCamera2Position())
+        }
+
+        binding.clearMapB.setOnClickListener {
+            map.clear()
         }
     }
 
@@ -207,6 +223,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 }
             }
 
+            map.draw(rgb)
             processMarkers(rgb)
             drawCenterLines(rgb)
 
@@ -234,9 +251,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
     }
 
-    private fun processMarkers(frame:Mat) {
+    private fun processMarkers(frame: Mat) {
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
-           filteredMarker.draw(frame)
+            filteredMarker.draw(frame)
 
             val cam = camera.calculateCameraPosition(filteredMarker, rgb)
             markersList.add(cam)

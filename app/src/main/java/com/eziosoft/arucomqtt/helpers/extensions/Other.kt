@@ -14,21 +14,7 @@
  *     You should have received a copy of the GNU General Public License
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.eziosoft.arucomqtt
 
-import android.app.Application
-import android.util.Log
-import dagger.hilt.android.HiltAndroidApp
-import org.opencv.android.OpenCVLoader
+package com.eziosoft.arucomqtt.helpers.extensions
 
-@HiltAndroidApp
-class App : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        //load opencv
-        if (!OpenCVLoader.initDebug()) Log.e("OpenCv", "Unable to load OpenCV") else Log.d(
-            "OpenCv",
-            "OpenCV loaded"
-        )
-    }
-}
+const val TAG = "aaaa"

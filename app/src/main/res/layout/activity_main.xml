@@ -66,4 +66,21 @@
         android:text="@string/capture"
         opencv:layout_constraintStart_toStartOf="parent"
         opencv:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/mapB"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="map"
+        opencv:layout_constraintEnd_toEndOf="@+id/clearMapB"
+        opencv:layout_constraintStart_toStartOf="parent"
+        opencv:layout_constraintTop_toBottomOf="@+id/tryCalB" />
+
+    <Button
+        android:id="@+id/clearMapB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="clear map"
+        opencv:layout_constraintStart_toStartOf="parent"
+        opencv:layout_constraintTop_toBottomOf="@+id/mapB" />
 </androidx.constraintlayout.widget.ConstraintLayout>

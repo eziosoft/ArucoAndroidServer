@@ -34,13 +34,17 @@
 
 package com.eziosoft.arucomqtt.vision.camera
 
+import android.util.Log
 import com.eziosoft.arucomqtt.Cartesian
 import com.eziosoft.arucomqtt.vision.Marker
 import com.eziosoft.arucomqtt.MovingAverageFilter
+import com.eziosoft.arucomqtt.helpers.extensions.TAG
 import com.eziosoft.arucomqtt.helpers.filters.extensions.PI_2
 import com.eziosoft.arucomqtt.helpers.filters.extensions.addAngleRadians
 import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
 import com.eziosoft.arucomqtt.helpers.filters.extensions.normalizeAngle
+import com.eziosoft.arucomqtt.phoneAttitude.DeviceAttitudeProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.opencv.calib3d.Calib3d
 import org.opencv.core.*
 import kotlin.math.PI
@@ -48,19 +52,45 @@ import org.opencv.core.Mat
 
 import org.opencv.core.Core
 import org.opencv.core.CvType
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
-
-class CameraPosition {
+@ExperimentalCoroutinesApi
+@Singleton
+class CameraPosition @ExperimentalCoroutinesApi
+@Inject constructor(val deviceAttitudeProvider: DeviceAttitudeProvider) :
+    DeviceAttitudeProvider.DeviceAttitudeListener {
     private val filterX = MovingAverageFilter(15)
     private val filterY = MovingAverageFilter(15)
     private val filterZ = MovingAverageFilter(15)
+
+
+    private lateinit var cam2: Marker
+
+
+    init {
+        deviceAttitudeProvider.setDeviceAttitudeListener(this)
+    }
+
+
+    override fun onDeviceAttitude(
+        attitude: DeviceAttitudeProvider.Attitude,
+        rotationMatrix: FloatArray
+    ) {
+        Log.v(TAG, "onDeviceAttitude: ${rotationMatrix.contentToString()}")
+    }
+
+    fun getLastCamera2Position() = cam2
+
 
     fun calculateCameraPosition2(cam: Marker): Marker {
         val R = Mat(3, 3, CvType.CV_32FC1)
         Calib3d.Rodrigues(cam.rvec, R)
         val camR = R.t()
+
+        camR.logMat("camR")
 
 
         val _camR = Mat(1, 3, CvType.CV_64F)
@@ -92,6 +122,8 @@ class CameraPosition {
         _camR.release()
         tvec_conv.release()
         R.release()
+
+        cam2 = marker
         return marker
     }
 
@@ -128,6 +160,7 @@ class CameraPosition {
         }
 
     }
+
 
 }
 
