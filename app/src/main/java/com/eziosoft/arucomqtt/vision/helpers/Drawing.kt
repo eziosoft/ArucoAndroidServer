@@ -32,8 +32,10 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt
+package com.eziosoft.arucomqtt.vision.helpers
 
+import com.eziosoft.arucomqtt.COLOR_PINK
+import com.eziosoft.arucomqtt.COLOR_RED
 import com.eziosoft.arucomqtt.helpers.filters.extensions.invertAngleRadians
 import com.eziosoft.arucomqtt.vision.Marker
 import org.opencv.core.Mat
@@ -44,7 +46,7 @@ import org.opencv.imgproc.Imgproc
 import kotlin.math.cos
 import kotlin.math.sin
 
-const val SCALE_TO_DRAW = 5
+const val SCALE_TO_DRAW = 10
 private val path = mutableListOf<Point>() //to draw a path
 
 fun Marker.addToPath(frame: Mat) {
