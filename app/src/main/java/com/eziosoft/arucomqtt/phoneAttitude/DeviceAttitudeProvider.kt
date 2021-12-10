@@ -35,6 +35,7 @@ import javax.inject.Singleton
 
 @ExperimentalCoroutinesApi
 @Singleton
+@Suppress("MagicNumber")
 class DeviceAttitudeProvider(
     private val sensorManager: SensorManager
 ) {
@@ -75,10 +76,10 @@ class DeviceAttitudeProvider(
             }
         }
 
-        override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-        }
+        override fun onAccuracyChanged(p0: Sensor?, p1: Int) =Unit
 
     }
+
 
     init {
         Log.d(TAG, "start: AttitudeProvider")

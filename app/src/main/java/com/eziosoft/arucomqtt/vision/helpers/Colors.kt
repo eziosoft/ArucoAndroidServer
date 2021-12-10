@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt
+package com.eziosoft.arucomqtt.vision.helpers
 
 import org.opencv.core.Scalar
 

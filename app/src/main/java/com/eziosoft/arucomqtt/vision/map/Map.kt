@@ -17,7 +17,7 @@
 
 package com.eziosoft.arucomqtt.vision.map
 
-import com.eziosoft.arucomqtt.COLOR_GREEN
+import com.eziosoft.arucomqtt.vision.helpers.COLOR_GREEN
 import com.eziosoft.arucomqtt.vision.helpers.SCALE_TO_DRAW
 import com.eziosoft.arucomqtt.vision.Marker
 import org.opencv.core.Mat

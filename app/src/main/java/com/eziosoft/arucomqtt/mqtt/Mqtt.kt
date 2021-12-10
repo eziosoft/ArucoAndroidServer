@@ -42,10 +42,11 @@ class Mqtt {
     val messageFlow get() = _messageFlow.asSharedFlow()
 
     fun isConnected(): Boolean {
-        return if (this::client.isInitialized)
+        return if (this::client.isInitialized) {
             client.state.isConnected
-        else
+        } else {
             false
+        }
     }
 
 
@@ -115,9 +116,9 @@ class Mqtt {
         client.subscribeWith().topicFilter(topic).callback(newMessageCallback).send()
 
     private val newMessageCallback =
-        (Consumer<Mqtt5Publish> { message ->
+        Consumer<Mqtt5Publish> { message ->
             CoroutineScope(Dispatchers.Main).launch {
                 _messageFlow.emit(MqttMessage(message.payloadAsBytes, message.topic.toString()))
             }
-        })
+        }
 }

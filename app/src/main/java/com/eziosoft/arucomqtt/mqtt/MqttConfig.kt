@@ -17,5 +17,5 @@
 
 package com.eziosoft.arucomqtt.mqtt
 
-val BROKER_URL = "192.168.0.19"
-val MAIN_TOPIC = "robot/position"
+const val BROKER_URL = "192.168.0.19"
+const val MAIN_TOPIC = "robot/position"

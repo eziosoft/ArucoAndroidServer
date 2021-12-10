@@ -45,10 +45,7 @@ import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.vision.Marker
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.DICTIONARY
 import com.eziosoft.arucomqtt.vision.camera.CameraConfiguration.Companion.MARKER_LENGTH
-import com.eziosoft.arucomqtt.vision.helpers.addToPath
-import com.eziosoft.arucomqtt.vision.helpers.drawCenterLines
-import com.eziosoft.arucomqtt.vision.helpers.drawPath
-import com.eziosoft.arucomqtt.vision.helpers.drawRobot
+import com.eziosoft.arucomqtt.vision.helpers.*
 import com.eziosoft.arucomqtt.vision.map.Map
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -154,7 +151,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
     }
 
-
+    @Suppress("LongMethod")
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
         if (calibrate) {
             frame = inputFrame.rgba()
@@ -256,7 +253,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
             filteredMarker.draw(frame)
 
-            val cam = camera.calculateCameraPosition(filteredMarker, rgb)
+            val cam = camera.calculateCameraPosition(filteredMarker)
             markersList.add(cam)
             cam.addToPath(rgb)
             drawRobot(
@@ -297,8 +294,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         binding.cameraView.disableView()
     }
 
-    override fun onCameraViewStarted(width: Int, height: Int) {}
-    override fun onCameraViewStopped() {}
+    override fun onCameraViewStarted(width: Int, height: Int) = Unit
+    override fun onCameraViewStopped() =Unit
     private fun checkCameraPermission(): Boolean {
         if (ContextCompat.checkSelfPermission(
                 this,

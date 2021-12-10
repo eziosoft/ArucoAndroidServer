@@ -39,19 +39,18 @@ import com.eziosoft.arucomqtt.Cartesian
 import com.eziosoft.arucomqtt.vision.Marker
 import com.eziosoft.arucomqtt.MovingAverageFilter
 import com.eziosoft.arucomqtt.helpers.extensions.TAG
-import com.eziosoft.arucomqtt.helpers.filters.extensions.PI_2
-import com.eziosoft.arucomqtt.helpers.filters.extensions.addAngleRadians
+import com.eziosoft.arucomqtt.helpers.extensions.PI_2
+import com.eziosoft.arucomqtt.helpers.extensions.addAngleRadians
 import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
-import com.eziosoft.arucomqtt.helpers.filters.extensions.normalizeAngle
 import com.eziosoft.arucomqtt.phoneAttitude.DeviceAttitudeProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.opencv.calib3d.Calib3d
-import org.opencv.core.*
 import kotlin.math.PI
 import org.opencv.core.Mat
 
 import org.opencv.core.Core
 import org.opencv.core.CvType
+import org.opencv.core.Scalar
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.atan2
@@ -98,9 +97,9 @@ class CameraPosition @ExperimentalCoroutinesApi
         Core.multiply(camR, _1, _camR)
 
         val tvec_conv = Mat(3, 1, CvType.CV_64F)
-        tvec_conv.put(0, 0, (cam.tvec?.get(0, 0)?.get(0)!!))
-        tvec_conv.put(1, 0, (cam.tvec.get(0, 0)?.get(1)!!))
-        tvec_conv.put(2, 0, (cam.tvec[0, 0][2]))
+        tvec_conv.put(0, 0, cam.tvec?.get(0, 0)?.get(0)!!)
+        tvec_conv.put(1, 0, cam.tvec.get(0, 0)?.get(1)!!)
+        tvec_conv.put(2, 0, cam.tvec[0, 0][2])
 
 
         val camTvec = Mat(1, 3, CvType.CV_64F)
@@ -128,7 +127,7 @@ class CameraPosition @ExperimentalCoroutinesApi
     }
 
 
-    fun calculateCameraPosition(marker: Marker, frame: Mat): Marker {
+    fun calculateCameraPosition(marker: Marker): Marker {
         val x = marker.x
         val y = marker.y
 

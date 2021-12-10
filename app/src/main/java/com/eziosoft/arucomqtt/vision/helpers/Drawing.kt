@@ -34,9 +34,7 @@
 
 package com.eziosoft.arucomqtt.vision.helpers
 
-import com.eziosoft.arucomqtt.COLOR_PINK
-import com.eziosoft.arucomqtt.COLOR_RED
-import com.eziosoft.arucomqtt.helpers.filters.extensions.invertAngleRadians
+import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
 import com.eziosoft.arucomqtt.vision.Marker
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
@@ -60,6 +58,7 @@ fun Marker.addToPath(frame: Mat) {
     )
 }
 
+const val PATH_LENGTH = 5000
 fun drawPath(frame: Mat) {
     if (path.isNotEmpty()) {
         val matOfPoint = MatOfPoint()
@@ -67,12 +66,13 @@ fun drawPath(frame: Mat) {
         val matOfPointList = arrayListOf(matOfPoint)
 
         Imgproc.polylines(frame, matOfPointList, false, COLOR_RED, 2)
-        if (path.size > 5000) {
+        if (path.size > PATH_LENGTH) {
             path.removeAt(0)
         }
     }
 }
 
+@Suppress("MagicNumber")
 fun drawRobot(frame: Mat, marker: Marker, color: Scalar) {
     val offsetX: Double = frame.width() / 2.0
     val offsetY: Double = frame.height() / 2.0

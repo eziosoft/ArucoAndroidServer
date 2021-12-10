@@ -18,12 +18,12 @@
 
 package com.eziosoft.arucomqtt.vision
 
-import com.eziosoft.arucomqtt.c1
-import com.eziosoft.arucomqtt.c2
-import com.eziosoft.arucomqtt.helpers.filters.extensions.addAngleRadians
-import com.eziosoft.arucomqtt.helpers.filters.extensions.normalizeAngle
-import com.eziosoft.arucomqtt.helpers.filters.extensions.round
-import com.eziosoft.arucomqtt.helpers.filters.extensions.toDegree
+import com.eziosoft.arucomqtt.vision.helpers.c1
+import com.eziosoft.arucomqtt.vision.helpers.c2
+import com.eziosoft.arucomqtt.helpers.extensions.addAngleRadians
+import com.eziosoft.arucomqtt.helpers.extensions.normalizeAngle
+import com.eziosoft.arucomqtt.helpers.extensions.round
+import com.eziosoft.arucomqtt.helpers.extensions.toDegree
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
@@ -121,6 +121,7 @@ data class Marker(
             )
             Imgproc.putText(frame, toString(), centerInPixels, 1, 1.0, c1)
         } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 

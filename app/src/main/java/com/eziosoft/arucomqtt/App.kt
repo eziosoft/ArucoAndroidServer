@@ -26,9 +26,13 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         //load opencv
-        if (!OpenCVLoader.initDebug()) Log.e("OpenCv", "Unable to load OpenCV") else Log.d(
-            "OpenCv",
-            "OpenCV loaded"
-        )
+        if (!OpenCVLoader.initDebug()) {
+            Log.e("OpenCv", "Unable to load OpenCV")
+        } else {
+            Log.d(
+                "OpenCv",
+                "OpenCV loaded"
+            )
+        }
     }
 }
