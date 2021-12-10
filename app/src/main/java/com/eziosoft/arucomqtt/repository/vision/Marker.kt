@@ -16,10 +16,10 @@
  */
 
 
-package com.eziosoft.arucomqtt.vision
+package com.eziosoft.arucomqtt.repository.vision
 
-import com.eziosoft.arucomqtt.vision.helpers.c1
-import com.eziosoft.arucomqtt.vision.helpers.c2
+import com.eziosoft.arucomqtt.repository.vision.helpers.c1
+import com.eziosoft.arucomqtt.repository.vision.helpers.c2
 import com.eziosoft.arucomqtt.helpers.extensions.addAngleRadians
 import com.eziosoft.arucomqtt.helpers.extensions.normalizeAngle
 import com.eziosoft.arucomqtt.helpers.extensions.round

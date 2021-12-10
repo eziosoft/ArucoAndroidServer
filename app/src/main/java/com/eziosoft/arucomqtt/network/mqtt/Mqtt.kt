@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.mqtt
+package com.eziosoft.arucomqtt.network.mqtt
 
 
 import android.os.Build

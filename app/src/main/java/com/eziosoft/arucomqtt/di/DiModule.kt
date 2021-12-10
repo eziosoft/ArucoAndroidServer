@@ -19,7 +19,7 @@ package com.eziosoft.arucomqtt.di
 
 import android.content.Context
 import android.hardware.SensorManager
-import com.eziosoft.arucomqtt.phoneAttitude.DeviceAttitudeProvider
+import com.eziosoft.arucomqtt.repository.phoneAttitude.DeviceAttitudeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -32,17 +32,17 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.vision.camera
+package com.eziosoft.arucomqtt.repository.vision.camera
 
 import android.util.Log
 import com.eziosoft.arucomqtt.Cartesian
-import com.eziosoft.arucomqtt.vision.Marker
+import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.MovingAverageFilter
 import com.eziosoft.arucomqtt.helpers.extensions.TAG
 import com.eziosoft.arucomqtt.helpers.extensions.PI_2
 import com.eziosoft.arucomqtt.helpers.extensions.addAngleRadians
 import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
-import com.eziosoft.arucomqtt.phoneAttitude.DeviceAttitudeProvider
+import com.eziosoft.arucomqtt.repository.phoneAttitude.DeviceAttitudeProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.opencv.calib3d.Calib3d
 import kotlin.math.PI
@@ -59,7 +59,7 @@ import kotlin.math.sqrt
 @ExperimentalCoroutinesApi
 @Singleton
 class CameraPosition @ExperimentalCoroutinesApi
-@Inject constructor(val deviceAttitudeProvider: DeviceAttitudeProvider) :
+@Inject constructor(deviceAttitudeProvider: DeviceAttitudeProvider) :
     DeviceAttitudeProvider.DeviceAttitudeListener {
     private val filterX = MovingAverageFilter(15)
     private val filterY = MovingAverageFilter(15)

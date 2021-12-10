@@ -32,7 +32,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.vision.camera;
+package com.eziosoft.arucomqtt.repository.vision.camera;
 
 
 import java.util.ArrayList;
@@ -50,6 +50,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 public class CameraCalibrator {
@@ -110,6 +111,7 @@ public class CameraCalibrator {
             Log.i(TAG, "Camera matrix: " + mCameraMatrix.dump());
             Log.i(TAG, "Distortion coefficients: " + mDistortionCoefficients.dump());
 
+            @SuppressLint("DefaultLocale")
             String s = String.format("Average re-projection error: %f", mRms) + "\n";
             s += "Camera matrix: " + mCameraMatrix.dump() + "\n";
             s += "Distortion coefficients: " + mDistortionCoefficients.dump() + "\n";
@@ -184,8 +186,12 @@ public class CameraCalibrator {
     private void renderFrame(Mat rgbaFrame) {
         drawPoints(rgbaFrame);
 
-        Imgproc.putText(rgbaFrame, "Captured: " + mCornersBuffer.size(), new Point(rgbaFrame.cols() / 3 * 2, rgbaFrame.rows() * 0.1),
-                Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 255, 0));
+        Imgproc.putText(rgbaFrame,
+                "Captured: " + mCornersBuffer.size(),
+                new Point(rgbaFrame.cols() / 3 * 2,
+                        rgbaFrame.rows() * 0.1),
+                Core.FONT_HERSHEY_SIMPLEX, 1.0,
+                new Scalar(255, 255, 0));
     }
 
     public Mat getCameraMatrix() {

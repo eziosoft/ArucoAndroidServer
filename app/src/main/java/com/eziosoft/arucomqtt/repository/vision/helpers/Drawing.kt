@@ -32,10 +32,10 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.vision.helpers
+package com.eziosoft.arucomqtt.repository.vision.helpers
 
 import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
-import com.eziosoft.arucomqtt.vision.Marker
+import com.eziosoft.arucomqtt.repository.vision.Marker
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.Point

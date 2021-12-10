@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.phoneAttitude
+package com.eziosoft.arucomqtt.repository.phoneAttitude
 
 /*
  * Created by Bartosz Szczygiel on 3/31/21 9:35 PM

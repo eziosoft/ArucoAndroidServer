@@ -15,21 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.vision.helpers
+package com.eziosoft.arucomqtt.network.mqtt
 
-import org.opencv.core.Scalar
-
-@Transient
-val c1 = Scalar(255.0, 100.0, 0.0)
-
-@Transient
-val c2 = Scalar(255.0, 0.0, 255.0)
-
-@Transient
-val COLOR_PINK = Scalar(255.0, 0.0, 255.0)
-
-@Transient
-val COLOR_RED = Scalar(255.0, 0.0, 0.0)
-
-@Transient
-val COLOR_GREEN = Scalar(0.0, 255.0, 0.0)
+const val BROKER_URL = "192.168.0.19"
+const val MAIN_TOPIC = "robot/position"
