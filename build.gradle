@@ -46,4 +46,5 @@ task detektAll(type: io.gitlab.arturbosch.detekt.Detekt) {
     }
 }
 
+
 apply plugin: "io.gitlab.arturbosch.detekt"

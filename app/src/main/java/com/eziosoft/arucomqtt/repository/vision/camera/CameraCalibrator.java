@@ -217,20 +217,4 @@ public class CameraCalibrator {
     public void setCalibrated() {
         mIsCalibrated = true;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
