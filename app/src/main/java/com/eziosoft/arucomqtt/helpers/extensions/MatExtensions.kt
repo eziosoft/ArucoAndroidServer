@@ -15,21 +15,11 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt;
+package com.eziosoft.arucomqtt.helpers.filters.extensions
 
-import android.app.Application;
-import android.util.Log;
-import org.opencv.android.OpenCVLoader;
+import android.util.Log
+import org.opencv.core.Mat
 
-public class App extends Application {
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        //load opencv
-        if (!OpenCVLoader.initDebug())
-            Log.e("OpenCv", "Unable to load OpenCV");
-        else
-            Log.d("OpenCv", "OpenCV loaded");
-    }
+fun Mat.logMat(name: String) {
+    Log.d("aaa", "$name:${this.type()} ${this.channels()} -> ${this.dump()}")
 }

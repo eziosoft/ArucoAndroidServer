@@ -1,23 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-                xmlns:opencv="http://schemas.android.com/apk/res-auto"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:context=".MainActivity">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:opencv="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
 
     <org.opencv.android.JavaCameraView
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:visibility="gone"
-            android:id="@+id/camera_view"
-            opencv:show_fps="true"
-            opencv:camera_id="any"/>
+        android:id="@+id/camera_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="visible"
+        opencv:layout_constraintBottom_toBottomOf="parent"
+        opencv:layout_constraintEnd_toEndOf="parent"
+        opencv:layout_constraintStart_toStartOf="parent"
+        opencv:layout_constraintTop_toTopOf="parent"
+        opencv:show_fps="true" />
+
     <TextView
-            android:text="TextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/textView" android:layout_alignParentBottom="true"
-            android:layout_marginBottom="11dp" android:layout_alignParentStart="true"
-            android:layout_marginStart="10dp"
-            android:textColor="#0FF"/>
-</RelativeLayout>
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
+        android:textColor="@color/textColor"
+        android:textStyle="bold"
+        opencv:layout_constraintBottom_toBottomOf="parent"
+        opencv:layout_constraintStart_toStartOf="parent"
+        tools:text="text" />
+
+    <CheckBox
+        android:id="@+id/calB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="24dp"
+        android:text="@string/cal"
+        android:textColor="#FFF"
+        opencv:layout_constraintStart_toEndOf="@+id/captureB"
+        opencv:layout_constraintTop_toTopOf="parent"
+        tools:textColor="#000" />
+
+    <CheckBox
+        android:id="@+id/tryCalB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@id/calB"
+        android:layout_toEndOf="@+id/calB"
+        android:text="@string/try_cal"
+        android:textColor="#FFF"
+        opencv:layout_constraintStart_toStartOf="@+id/calB"
+        opencv:layout_constraintTop_toBottomOf="@+id/calB"
+        tools:textColor="#000" />
+
+    <Button
+        android:id="@+id/captureB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="24dp"
+        android:layout_toEndOf="@+id/tryCalB"
+        android:text="@string/capture"
+        opencv:layout_constraintStart_toStartOf="parent"
+        opencv:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/mapB"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="map"
+        opencv:layout_constraintEnd_toEndOf="@+id/clearMapB"
+        opencv:layout_constraintStart_toStartOf="parent"
+        opencv:layout_constraintTop_toBottomOf="@+id/tryCalB" />
+
+    <Button
+        android:id="@+id/clearMapB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="clear map"
+        opencv:layout_constraintStart_toStartOf="parent"
+        opencv:layout_constraintTop_toBottomOf="@+id/mapB" />
+</androidx.constraintlayout.widget.ConstraintLayout>
