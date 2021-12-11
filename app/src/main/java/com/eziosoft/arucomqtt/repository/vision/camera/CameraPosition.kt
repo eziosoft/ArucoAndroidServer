@@ -41,7 +41,9 @@ import com.eziosoft.arucomqtt.MovingAverageFilter
 import com.eziosoft.arucomqtt.helpers.extensions.TAG
 import com.eziosoft.arucomqtt.helpers.extensions.PI_2
 import com.eziosoft.arucomqtt.helpers.extensions.addAngleRadians
+import com.eziosoft.arucomqtt.helpers.extensions.round
 import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
+import com.eziosoft.arucomqtt.helpers.filters.extensions.logMatTOArray
 import com.eziosoft.arucomqtt.repository.phoneAttitude.DeviceAttitudeProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.opencv.calib3d.Calib3d
@@ -67,7 +69,7 @@ class CameraPosition @ExperimentalCoroutinesApi
 
 
     private lateinit var cam2: Marker
-
+    lateinit var arr :List<Double>
 
     init {
         deviceAttitudeProvider.setDeviceAttitudeListener(this)
@@ -78,7 +80,8 @@ class CameraPosition @ExperimentalCoroutinesApi
         attitude: DeviceAttitudeProvider.Attitude,
         rotationMatrix: FloatArray
     ) {
-        Log.v(TAG, "onDeviceAttitude: ${rotationMatrix.contentToString()}")
+         arr  = rotationMatrix.map { it.toDouble().round(2)}
+
     }
 
     fun getLastCamera2Position() = cam2
@@ -89,7 +92,9 @@ class CameraPosition @ExperimentalCoroutinesApi
         Calib3d.Rodrigues(cam.rvec, R)
         val camR = R.t()
 
-        camR.logMat("camR")
+
+        camR.logMatTOArray("camR arr")
+        Log.v(TAG, "devR arr: ${arr.toString()}")
 
 
         val _camR = Mat(1, 3, CvType.CV_64F)

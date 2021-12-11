@@ -18,8 +18,25 @@
 package com.eziosoft.arucomqtt.helpers.filters.extensions
 
 import android.util.Log
+import com.eziosoft.arucomqtt.helpers.extensions.round
 import org.opencv.core.Mat
 
 fun Mat.logMat(name: String) {
     Log.d("aaa", "$name:${this.type()} ${this.channels()} -> ${this.dump()}")
+}
+
+
+fun Mat.logMatTOArray(name: String) {
+    val arr = mutableListOf<Double>()
+    arr.add(this[0,0][0].round(2))
+    arr.add(this[0,1][0].round(2))
+    arr.add(this[0,2][0].round(2))
+    arr.add(this[1,0][0].round(2))
+    arr.add(this[1,1][0].round(2))
+    arr.add(this[1,2][0].round(2))
+    arr.add(this[2,0][0].round(2))
+    arr.add(this[2,1][0].round(2))
+    arr.add(this[2,2][0].round(2))
+
+    Log.i("aaaa", "$name: ${arr.toString()}}")
 }
