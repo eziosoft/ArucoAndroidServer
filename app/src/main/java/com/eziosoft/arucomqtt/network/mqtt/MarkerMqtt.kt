@@ -17,4 +17,11 @@
 
 package com.eziosoft.arucomqtt.network.mqtt
 
-data class MarkerMqtt(val x: Double, val y: Double, val z: Double)
+data class MarkerMqtt(
+    val x: Double,
+    val y: Double,
+    val z: Double,
+    val roll: Double,
+    val pitch: Double,
+    val yaw: Double
+)

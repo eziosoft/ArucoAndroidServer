@@ -36,65 +36,112 @@ package com.eziosoft.arucomqtt.repository.vision.camera
 
 import android.util.Log
 import com.eziosoft.arucomqtt.Cartesian
-import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.MovingAverageFilter
 import com.eziosoft.arucomqtt.helpers.extensions.*
 import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
-import com.eziosoft.arucomqtt.helpers.filters.extensions.logMatTOArray
+import com.eziosoft.arucomqtt.helpers.filters.extensions.toRotationMatrix
+import com.eziosoft.arucomqtt.network.mqtt.BROKER_URL
+import com.eziosoft.arucomqtt.network.mqtt.Mqtt
 import com.eziosoft.arucomqtt.repository.phoneAttitude.DeviceAttitudeProvider
+import com.eziosoft.arucomqtt.repository.vision.Marker
+import com.google.gson.Gson
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.opencv.calib3d.Calib3d
-import kotlin.math.PI
-import org.opencv.core.Mat
-
 import org.opencv.core.Core
 import org.opencv.core.CvType
+import org.opencv.core.Mat
 import org.opencv.core.Scalar
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
 @ExperimentalCoroutinesApi
 @Singleton
 class CameraPosition @ExperimentalCoroutinesApi
-@Inject constructor(deviceAttitudeProvider: DeviceAttitudeProvider) :
+@Inject constructor(
+    deviceAttitudeProvider: DeviceAttitudeProvider,
+    val mqtt: Mqtt,
+    val gson: Gson
+) :
     DeviceAttitudeProvider.DeviceAttitudeListener {
-    private val filterX = MovingAverageFilter(15)
-    private val filterY = MovingAverageFilter(15)
-    private val filterZ = MovingAverageFilter(15)
+    private val filterX = MovingAverageFilter(2)
+    private val filterY = MovingAverageFilter(2)
+    private val filterZ = MovingAverageFilter(2)
 
 
     private lateinit var cam2: Marker
-    lateinit var arr: List<Double>
+    private var rotationMatrixFromAcc = Mat(3, 3, CvType.CV_64F)
 
     init {
         deviceAttitudeProvider.setDeviceAttitudeListener(this)
+        mqtt.connectToBroker(BROKER_URL, "client") { status, error ->
+            Log.d("MQTT", "mqtt connected : $status")
+        }
     }
 
 
+    val topicTest = "testTopic"
+    var timer = 0L
     override fun onDeviceAttitude(
         attitude: DeviceAttitudeProvider.Attitude,
         rotationMatrix: FloatArray
     ) {
-        Log.d(TAG, "onDeviceAttitude: \n\n\n")
-        Log.d(TAG, "onDeviceAttitude: \n\n\n")
-        Log.d(TAG, "onDeviceAttitude: \n\n\n")
 
-        arr = rotationMatrix.map { it.toDouble().round(2) }
-        Log.i(TAG, "onDeviceAttitude A: ${attitude}")
+
+        val attitudeCorrected = DeviceAttitudeProvider.Attitude(
+            attitude.azimuth,
+            attitude.roll.toRadian().invertAngleRadians().normalizeAngle().toDegree(),
+            -attitude.pitch
+        )
+
+//        rotationMatrixFromAcc =
+//            toRotationMatrix(
+//                attitudeCorrected.azimuth.toRadian(),
+//                attitudeCorrected.pitch.toRadian(),
+//                attitudeCorrected.roll.toRadian()
+//            )
 
         if (this::cam2.isInitialized) {
             cam2.rotation?.let {
                 val attCam = DeviceAttitudeProvider.Attitude(
                     it.z.toDegree(),
                     it.x.toDegree(),
-                    it.y.toDegree()
+                    it.y.toDegree(),
                 )
-                Log.v(TAG, "onDeviceAttitude C: ${attCam}")
-            }
-        }
 
+                rotationMatrixFromAcc =
+                    toRotationMatrix(
+                        it.z,
+                        it.x,
+                        it.y
+                    )
+
+                if (System.currentTimeMillis() > timer) {
+                    mqtt.publishMessage(
+                        gson.toJson(attCam),
+                        "testTopicCam",
+                        false
+                    ) { status, error -> }
+                    mqtt.publishMessage(
+                        gson.toJson(attitudeCorrected),
+                        "testTopicAcc",
+                        false
+                    ) { status, error -> }
+
+
+                    mqtt.publishMessage(
+                        gson.toJson(rotationMatrix),
+                        "accRotationMatrix",
+                        false
+                    ) { status, error -> }
+
+                    timer = System.currentTimeMillis() + 100L
+                }
+            }
+
+        }
 
 
     }
@@ -108,13 +155,10 @@ class CameraPosition @ExperimentalCoroutinesApi
         val camR = R.t()
 
 
-//        camR.logMatTOArray("camR arr")
-//        Log.v(TAG, "devR arr: ${arr.toString()}")
-
-
-        val _camR = Mat(1, 3, CvType.CV_64F)
+        val _camR = Mat()
         val _1 = Scalar(-1.0)
         Core.multiply(camR, _1, _camR)
+
 
         val tvec_conv = Mat(3, 1, CvType.CV_64F)
         tvec_conv.put(0, 0, cam.tvec?.get(0, 0)?.get(0)!!)

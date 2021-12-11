@@ -19,7 +19,9 @@ package com.eziosoft.arucomqtt.di
 
 import android.content.Context
 import android.hardware.SensorManager
+import androidx.core.view.ViewCompat
 import com.eziosoft.arucomqtt.repository.phoneAttitude.DeviceAttitudeProvider
+import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,5 +45,11 @@ object DiModule {
     @Singleton
     fun provideDeviceAttitudeProvider(sensorManager: SensorManager): DeviceAttitudeProvider {
         return DeviceAttitudeProvider(sensorManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return Gson()
     }
 }
