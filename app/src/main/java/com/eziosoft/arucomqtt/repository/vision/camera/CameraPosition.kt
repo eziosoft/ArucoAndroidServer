@@ -38,10 +38,7 @@ import android.util.Log
 import com.eziosoft.arucomqtt.Cartesian
 import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.MovingAverageFilter
-import com.eziosoft.arucomqtt.helpers.extensions.TAG
-import com.eziosoft.arucomqtt.helpers.extensions.PI_2
-import com.eziosoft.arucomqtt.helpers.extensions.addAngleRadians
-import com.eziosoft.arucomqtt.helpers.extensions.round
+import com.eziosoft.arucomqtt.helpers.extensions.*
 import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
 import com.eziosoft.arucomqtt.helpers.filters.extensions.logMatTOArray
 import com.eziosoft.arucomqtt.repository.phoneAttitude.DeviceAttitudeProvider
@@ -69,7 +66,7 @@ class CameraPosition @ExperimentalCoroutinesApi
 
 
     private lateinit var cam2: Marker
-    lateinit var arr :List<Double>
+    lateinit var arr: List<Double>
 
     init {
         deviceAttitudeProvider.setDeviceAttitudeListener(this)
@@ -80,7 +77,25 @@ class CameraPosition @ExperimentalCoroutinesApi
         attitude: DeviceAttitudeProvider.Attitude,
         rotationMatrix: FloatArray
     ) {
-         arr  = rotationMatrix.map { it.toDouble().round(2)}
+        Log.d(TAG, "onDeviceAttitude: \n\n\n")
+        Log.d(TAG, "onDeviceAttitude: \n\n\n")
+        Log.d(TAG, "onDeviceAttitude: \n\n\n")
+
+        arr = rotationMatrix.map { it.toDouble().round(2) }
+        Log.i(TAG, "onDeviceAttitude A: ${attitude}")
+
+        if (this::cam2.isInitialized) {
+            cam2.rotation?.let {
+                val attCam = DeviceAttitudeProvider.Attitude(
+                    it.z.toDegree(),
+                    it.x.toDegree(),
+                    it.y.toDegree()
+                )
+                Log.v(TAG, "onDeviceAttitude C: ${attCam}")
+            }
+        }
+
+
 
     }
 
@@ -93,8 +108,8 @@ class CameraPosition @ExperimentalCoroutinesApi
         val camR = R.t()
 
 
-        camR.logMatTOArray("camR arr")
-        Log.v(TAG, "devR arr: ${arr.toString()}")
+//        camR.logMatTOArray("camR arr")
+//        Log.v(TAG, "devR arr: ${arr.toString()}")
 
 
         val _camR = Mat(1, 3, CvType.CV_64F)
