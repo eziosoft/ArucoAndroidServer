@@ -65,7 +65,7 @@ fun drawPath(frame: Mat) {
         matOfPoint.fromList(path)
         val matOfPointList = arrayListOf(matOfPoint)
 
-        Imgproc.polylines(frame, matOfPointList, false, COLOR_RED, 2)
+        Imgproc.polylines(frame, matOfPointList, false, COLOR_DARK_GREEN, 2)
         if (path.size > PATH_LENGTH) {
             path.removeAt(0)
         }
@@ -92,6 +92,7 @@ fun drawRobot(frame: Mat, marker: Marker, color: Scalar) {
         color,
         2
     )
+    Imgproc.putText(frame, marker.id.toString(), p, 1, 2.0, COLOR_WHITE)
 }
 
 fun drawCenterLines(frame: Mat) {

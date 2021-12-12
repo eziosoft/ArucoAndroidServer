@@ -21,22 +21,23 @@ package com.eziosoft.arucomqtt.network.mqtt
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
-import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
-import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
+import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient
+import com.hivemq.client.mqtt.mqtt3.Mqtt3Client
+import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.function.Consumer
+import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.N)
-class Mqtt {
+class Mqtt @Inject constructor() {
     data class MqttMessage(val message: ByteArray, val topic: String)
 
     private val TAG = "MQTT_CLIENT"
-    private lateinit var client: Mqtt5AsyncClient
+    private lateinit var client: Mqtt3AsyncClient
 
     private val _messageFlow = MutableSharedFlow<MqttMessage>()
     val messageFlow get() = _messageFlow.asSharedFlow()
@@ -57,7 +58,7 @@ class Mqtt {
         status: (messageSent: Boolean, throwable: Throwable?) -> Unit
     ) {
         val messageBuilder =
-            Mqtt5Publish.builder()
+            Mqtt3Publish.builder()
                 .topic(topic)
                 .retain(retain)
 
@@ -85,10 +86,34 @@ class Mqtt {
         brokerURL: String, lastWillTopic: String, lastWillPayload: ByteArray,
         clientID: String, status: (connected: Boolean, exception: Throwable?) -> Unit
     ) {
-        client = Mqtt5Client.builder()
+        client = Mqtt3Client.builder()
             .identifier(clientID)
             .serverHost(brokerURL)
             .willPublish().topic(lastWillTopic).payload(lastWillPayload).applyWillPublish()
+            .buildAsync()
+
+        Log.d(TAG, "connect")
+        client.connect().whenComplete { connAck, throwable ->
+            if (throwable != null) {
+                // Handle connection failure
+                Log.e(TAG, "connect: ", throwable)
+                status(false, throwable)
+            } else {
+                // Setup subscribes or start publishing
+                Log.d(TAG, "connect: Connected")
+                status(true, null)
+            }
+        }
+    }
+
+    fun connectToBroker(
+        brokerURL: String,
+        clientID: String,
+        status: (connected: Boolean, exception: Throwable?) -> Unit
+    ) {
+        client = Mqtt3Client.builder()
+            .identifier(clientID)
+            .serverHost(brokerURL)
             .buildAsync()
 
         Log.d(TAG, "connect")
@@ -116,7 +141,7 @@ class Mqtt {
         client.subscribeWith().topicFilter(topic).callback(newMessageCallback).send()
 
     private val newMessageCallback =
-        Consumer<Mqtt5Publish> { message ->
+        Consumer<Mqtt3Publish> { message ->
             CoroutineScope(Dispatchers.Main).launch {
                 _messageFlow.emit(MqttMessage(message.payloadAsBytes, message.topic.toString()))
             }

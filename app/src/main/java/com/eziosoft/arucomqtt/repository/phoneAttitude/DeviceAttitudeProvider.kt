@@ -58,6 +58,7 @@ class DeviceAttitudeProvider(
                     rotMat,
                     event.values
                 )
+
                 SensorManager
                     .remapCoordinateSystem(
                         rotMat,

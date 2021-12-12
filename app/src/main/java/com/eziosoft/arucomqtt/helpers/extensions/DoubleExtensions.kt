@@ -29,6 +29,7 @@ fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDo
 fun Double.toRadian(): Double = this / 180 * Math.PI
 @Suppress("MagicNumber")
 fun Double.toDegree(): Double = this * 180.0 / Math.PI
+fun Float.toDegree(): Double = this * 180.0 / Math.PI
 fun Double.invertAngleRadians() = (this + Math.PI) % TWO_PI
 fun Double.addAngleRadians(angleRadians: Double) = (this + angleRadians) % TWO_PI
 

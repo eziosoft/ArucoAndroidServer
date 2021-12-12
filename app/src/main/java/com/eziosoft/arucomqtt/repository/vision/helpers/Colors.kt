@@ -33,3 +33,9 @@ val COLOR_RED = Scalar(255.0, 0.0, 0.0)
 
 @Transient
 val COLOR_GREEN = Scalar(0.0, 255.0, 0.0)
+
+@Transient
+val COLOR_DARK_GREEN = Scalar(0.0, 180.0, 0.0)
+
+@Transient
+val COLOR_WHITE = Scalar(255.0, 255.0, 255.0)

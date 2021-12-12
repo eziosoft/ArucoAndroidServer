@@ -253,22 +253,31 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
             filteredMarker.draw(frame)
 
-            val cam = camera.calculateCameraPosition(filteredMarker)
-            markersList.add(cam)
-            cam.addToPath(rgb)
-            drawRobot(
-                rgb,
-                cam,
-                COLOR_GREEN
-            )
-
-            val cam1 = camera.calculateCameraPosition2(filteredMarker)
+            val cam1 = camera.calculateCameraPosition1(filteredMarker)
             markersList.add(cam1)
             drawRobot(
                 rgb,
                 cam1,
+                COLOR_RED
+            )
+
+            val cam2 = camera.calculateCameraPosition2(filteredMarker)
+            markersList.add(cam2)
+            drawRobot(
+                rgb,
+                cam2,
                 COLOR_PINK
             )
+
+            val cam3 = camera.calculateCameraPosition3(filteredMarker)
+            markersList.add(cam3)
+            drawRobot(
+                rgb,
+                cam3,
+                COLOR_GREEN
+            )
+
+            cam3.addToPath(rgb)
         }
     }
 
