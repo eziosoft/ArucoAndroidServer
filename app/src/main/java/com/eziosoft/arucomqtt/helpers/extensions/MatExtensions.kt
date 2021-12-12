@@ -19,13 +19,31 @@ package com.eziosoft.arucomqtt.helpers.filters.extensions
 
 import android.util.Log
 import com.eziosoft.arucomqtt.helpers.extensions.round
+import com.eziosoft.arucomqtt.repository.vision.Marker
 import org.opencv.core.CvType
 import org.opencv.core.Mat
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 fun Mat.logMat(name: String) {
     Log.d("aaa", "$name:${this.type()} ${this.channels()} -> ${this.dump()}")
 }
 
+fun Mat.toList(): List<Double> {
+    val arr = mutableListOf<Double>()
+    arr.add(this[0, 0][0].round(2))
+    arr.add(this[0, 1][0].round(2))
+    arr.add(this[0, 2][0].round(2))
+    arr.add(this[1, 0][0].round(2))
+    arr.add(this[1, 1][0].round(2))
+    arr.add(this[1, 2][0].round(2))
+    arr.add(this[2, 0][0].round(2))
+    arr.add(this[2, 1][0].round(2))
+    arr.add(this[2, 2][0].round(2))
+    return arr
+}
 
 fun Mat.logMatTOArray(name: String) {
     val arr = mutableListOf<Double>()
@@ -42,58 +60,48 @@ fun Mat.logMatTOArray(name: String) {
     Log.i("aaaa", "$name: ${arr.toString()}}")
 }
 
-/** this conversion uses NASA standard aeroplane conventions as described on page:
- * https://www.euclideanspace.com/maths/geometry/rotations/euler/index.htm
- * Coordinate System: right hand
- * Positive angle: right hand
- * Order of euler angles: heading first, then attitude, then bank
- * matrix row column ordering:
- * [m00 m01 m02]
- * [m10 m11 m12]
- * [m20 m21 m22] */
-fun toRotationMatrix( heading: Double,  bank: Double,attitude: Double): Mat {
-    // Assuming the angles are in radians.
-    val ch = Math.cos(heading)
-    val sh = Math.sin(heading)
-    val ca = Math.cos(attitude)
-    val sa = Math.sin(attitude)
-    val cb = Math.cos(bank)
-    val sb = Math.sin(bank)
 
-//    val ch = Math.cos(attitude)
-//    val sh = Math.sin(attitude)
-//    val ca = Math.cos(heading)
-//    val sa = Math.sin(heading)
-//    val cb = Math.cos(bank)
-//    val sb = Math.sin(bank)
-
-//    val ch = Math.cos(heading)
-//    val sh = Math.sin(heading)
-//    val ca = Math.cos(attitude)
-//    val sa = Math.sin(attitude)
-//    val cb = Math.cos(bank)
-//    val sb = Math.sin(bank)
-
-
-    val m00 = ch * ca
-    val m01 = sh * sb - ch * sa * cb
-    val m02 = ch * sa * sb + sh * cb
-    val m10 = sa
-    val m11 = ca * cb
-    val m12 = -ca * sb
-    val m20 = -sh * ca
-    val m21 = sh * sa * cb + ch * sb
-    val m22 = -sh * sa * sb + ch * cb
+fun rotationMatrixFromEuler(
+    roll: Double, pitch: Double,
+    yaw: Double
+): Mat {
+    val cp = cos(pitch)
+    val sp = sin(pitch)
+    val sr = sin(roll)
+    val cr = cos(roll)
+    val sy = sin(yaw)
+    val cy = cos(yaw)
 
     val mat = Mat(3, 3, CvType.CV_64FC1)
-    mat.put(0, 0, m00)
-    mat.put(0, 1, m01)
-    mat.put(0, 2, m02)
-    mat.put(1, 0, m10)
-    mat.put(1, 1, m11)
-    mat.put(1, 2, m12)
-    mat.put(2, 0, m20)
-    mat.put(2, 1, m21)
-    mat.put(2, 1, m22)
+    mat.put(0, 0, cp * cy)
+    mat.put(0, 1, sr * sp * cy - cr * sy)
+    mat.put(0, 2, cr * sp * cy + sr * sy)
+
+    mat.put(1, 0, cp * sy)
+    mat.put(1, 1, sr * sp * sy + cr * cy)
+    mat.put(1, 2, cr * sp * sy - sr * cy)
+
+    mat.put(2, 0, -sp)
+    mat.put(2, 1, sr * cp)
+    mat.put(2, 2, cr * cp)
+
     return mat
+}
+
+
+fun rotationMatrixToEulerAngles(R: Mat): Marker.Rotation {
+    val sy = sqrt(R[0, 0][0] * R[0, 0][0] + R[1, 0][0] * R[1, 0][0])
+    val singular = sy < 1e-6
+
+    return if (!singular) {
+        val x = atan2(R[2, 1][0], R[2, 2][0])
+        val y = atan2(-R[2, 0][0], sy)
+        val z = atan2(R[1, 0][0], R[0, 0][0])
+        Marker.Rotation(x, y, z)
+    } else {
+        val x = atan2(-R[1, 2][0], R[1, 1][0])
+        val y = atan2(-R[2, 0][0], sy)
+        val z = 0.0
+        Marker.Rotation(x, y, z)
+    }
 }
