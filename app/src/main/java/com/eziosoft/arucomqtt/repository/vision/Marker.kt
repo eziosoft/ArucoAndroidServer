@@ -31,10 +31,10 @@ import java.lang.Exception
 import kotlin.math.*
 
 data class Marker(
-    val id: Int,
-    val x: Double,
-    val y: Double,
-    val z: Double,
+    val id: Int = -1,
+    val x: Double = 0.0,
+    val y: Double = 0.0,
+    val z: Double = 0.0,
     val corners: Mat? = null,
     var heading: Double = 0.0,
     val rotation: Rotation? = null,

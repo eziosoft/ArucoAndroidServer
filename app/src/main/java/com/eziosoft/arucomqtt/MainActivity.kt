@@ -263,6 +263,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
     private fun processMarkers(frame: Mat) {
+        var cam3 = Marker()
+
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
             filteredMarker.draw(frame)
 
@@ -282,7 +284,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 COLOR_PINK
             )
 
-            val cam3 = camera.calculateCameraPosition3(filteredMarker)
+            cam3 = camera.calculateCameraPosition3(filteredMarker)
             markersList.add(cam3)
             drawRobot(
                 rgb,
@@ -292,6 +294,12 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
             cam3.addToPath(rgb)
         }
+
+        drawRobot(
+            rgb,
+            cam3,
+            COLOR_GREEN
+        )
     }
 
     private fun log(str: String) {
