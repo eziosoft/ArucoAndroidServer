@@ -1,19 +1,3 @@
-/*
- *     This file is part of ArucoAndroidServer.
- *
- *     ArucoAndroidServer is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *
- *     Foobar is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
- */
 
 /*
  *     This file is part of ArucoAndroidServer.
@@ -32,7 +16,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.repository.vision.camera
+package com.eziosoft.arucomqtt.repository.vision.camera.position
 
 import com.eziosoft.arucomqtt.Cartesian
 import com.eziosoft.arucomqtt.MovingAverageFilter
@@ -58,9 +42,13 @@ class CameraPosition @ExperimentalCoroutinesApi
     deviceAttitudeProvider: DeviceAttitudeProvider
 ) :
     DeviceAttitudeProvider.DeviceAttitudeListener {
-    private val filterX = MovingAverageFilter(15)
-    private val filterY = MovingAverageFilter(15)
-    private val filterZ = MovingAverageFilter(15)
+    private val filterXcam2 = MovingAverageFilter(15)
+    private val filterYcam2 = MovingAverageFilter(15)
+    private val filterZcam2 = MovingAverageFilter(15)
+
+    private val filterXcam3 = MovingAverageFilter(5)
+    private val filterYcam3 = MovingAverageFilter(5)
+    private val filterZcam3 = MovingAverageFilter(1)
 
 
     private lateinit var cam1: Marker
@@ -121,9 +109,9 @@ class CameraPosition @ExperimentalCoroutinesApi
 
         val marker = Marker(
             1003,
-            y = camTvec[0, 0][0],
-            x = camTvec[1, 0][0],
-            z = camTvec[2, 0][0],
+            y = filterYcam3.add(-camTvec[0, 0][0]),
+            x = filterXcam3.add(camTvec[1, 0][0]),
+            z = filterZcam3.add(camTvec[2, 0][0]),
             rotation = rotationCam
         )
 
@@ -159,9 +147,9 @@ class CameraPosition @ExperimentalCoroutinesApi
 
         val marker = Marker(
             1002,
-            x = filterX.add(camTvec[0, 0][0]),
-            y = filterY.add(camTvec[1, 0][0]),
-            z = filterZ.add(camTvec[2, 0][0]),
+            x = filterXcam2.add(camTvec[0, 0][0]),
+            y = filterYcam2.add(camTvec[1, 0][0]),
+            z = filterZcam2.add(camTvec[2, 0][0]),
             rotation = rotationCam
         )
 
@@ -189,8 +177,6 @@ class CameraPosition @ExperimentalCoroutinesApi
         cam1 = cam
         return cam
     }
-
-
 
 
 }

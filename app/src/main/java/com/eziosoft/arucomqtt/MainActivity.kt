@@ -34,19 +34,22 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
-import com.eziosoft.arucomqtt.repository.vision.camera.CameraPosition
-import com.eziosoft.arucomqtt.repository.vision.camera.CameraCalibrator
-import com.eziosoft.arucomqtt.repository.vision.camera.CameraConfiguration.Companion.CAMERA_DISTORTION
-import com.eziosoft.arucomqtt.repository.vision.camera.CameraConfiguration.Companion.CAMERA_FRONT
-import com.eziosoft.arucomqtt.repository.vision.camera.CameraConfiguration.Companion.CAMERA_HEIGH
-import com.eziosoft.arucomqtt.repository.vision.camera.CameraConfiguration.Companion.CAMERA_MATRIX
-import com.eziosoft.arucomqtt.repository.vision.camera.CameraConfiguration.Companion.CAMERA_WIDTH
+import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_DISTORTION
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_FRONT
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_HEIGH
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_MATRIX
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_WIDTH
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
+import com.eziosoft.arucomqtt.network.mqtt.BROKER_URL
+import com.eziosoft.arucomqtt.network.mqtt.Mqtt
 import com.eziosoft.arucomqtt.repository.vision.Marker
-import com.eziosoft.arucomqtt.repository.vision.camera.CameraConfiguration.Companion.DICTIONARY
-import com.eziosoft.arucomqtt.repository.vision.camera.CameraConfiguration.Companion.MARKER_LENGTH
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.DICTIONARY
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.MARKER_LENGTH
 import com.eziosoft.arucomqtt.repository.vision.helpers.*
 import com.eziosoft.arucomqtt.repository.vision.map.Map
+import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -85,7 +88,14 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     @Inject
     lateinit var camera: CameraPosition
 
-    private val map = Map()
+    @Inject
+    lateinit var map: Map
+
+    @Inject
+    lateinit var mqtt: Mqtt
+
+    @Inject
+    lateinit var gson: Gson
 
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
@@ -132,12 +142,15 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
 
         binding.mapB.setOnClickListener {
-            map.addPoint(camera.getLastCamera2Position())
+            map.addPoint(camera.getLastCamera3Position())
+            mqtt.publishMessage(gson.toJson(map), "map", false) { sent, error -> }
         }
 
         binding.clearMapB.setOnClickListener {
             map.clear()
         }
+
+        mqtt.connectToBroker(BROKER_URL, "cliemt") { connected, error -> }
     }
 
     public override fun onResume() {
@@ -221,7 +234,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 }
             }
 
-            map.draw(rgb)
+            map.draw(rgb, COLOR_RED)
             processMarkers(rgb)
             drawCenterLines(rgb)
 
@@ -304,7 +317,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
     override fun onCameraViewStarted(width: Int, height: Int) = Unit
-    override fun onCameraViewStopped() =Unit
+    override fun onCameraViewStopped() = Unit
     private fun checkCameraPermission(): Boolean {
         if (ContextCompat.checkSelfPermission(
                 this,

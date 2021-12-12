@@ -15,22 +15,6 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*
- *     This file is part of ArucoAndroidServer.
- *
- *     ArucoAndroidServer is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *
- *     Foobar is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
- */
 
 package com.eziosoft.arucomqtt.repository.vision.helpers
 
@@ -58,7 +42,7 @@ fun Marker.addToPath(frame: Mat) {
     )
 }
 
-const val PATH_LENGTH = 5000
+const val PATH_LENGTH = 500
 fun drawPath(frame: Mat) {
     if (path.isNotEmpty()) {
         val matOfPoint = MatOfPoint()
@@ -93,6 +77,35 @@ fun drawRobot(frame: Mat, marker: Marker, color: Scalar) {
         2
     )
     Imgproc.putText(frame, marker.id.toString(), p, 1, 2.0, COLOR_WHITE)
+}
+
+// TODO NOT WORKING
+fun drawMarkerOnMap(frame: Mat, marker: Marker, color: Scalar) {
+    val offsetX: Double = frame.width() / 2.0
+    val offsetY: Double = frame.height() / 2.0
+
+    val p = Point(
+        marker.x / SCALE_TO_DRAW + offsetX,
+        marker.y / SCALE_TO_DRAW + offsetY
+    )
+    Imgproc.rectangle(
+        frame,
+        Point(p.x - 10, p.y - 10),
+        Point(p.x + 10, p.y + 10),
+        color,
+        1
+    )
+    Imgproc.line(
+        frame,
+        p,
+        Point(
+            p.x + 10 * sin(-marker.heading.invertAngleRadians()),
+            p.y + 10 * cos(-marker.heading.invertAngleRadians())
+        ),
+        color,
+        2
+    )
+    Imgproc.putText(frame, marker.id.toString(), p, 1, 2.0, color)
 }
 
 fun drawCenterLines(frame: Mat) {
