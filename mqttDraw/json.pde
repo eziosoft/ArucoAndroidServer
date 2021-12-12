@@ -6,6 +6,7 @@ void loadCam(String json) {
 }
 
 void loadMap(String json) {
+  mapPoints.clear();
   println("load map");
   JSONObject jsonObject = parseJSONObject(json);
 
