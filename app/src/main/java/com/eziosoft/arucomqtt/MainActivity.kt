@@ -152,7 +152,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
         mqtt.connectToBroker(BROKER_URL, "cliemt") { connected, error ->
             if (connected) {
-                mqtt.publishMessage(gson.toJson(map), "map", false) { sent, error -> }
+                mqtt.publishMessage(gson.toJson(map), "map", true) { sent, error -> }
             }
         }
 
@@ -299,6 +299,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             )
 
             cam3.addToPath(rgb)
+            publishCameraLocation(cam3)
         }
 
         drawRobot(
@@ -306,6 +307,12 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             cam3,
             COLOR_GREEN
         )
+
+
+    }
+
+    private fun publishCameraLocation(cam: Marker) {
+        mqtt.publishMessage(gson.toJson(cam), "cam", true) { s, e -> }
     }
 
     private fun log(str: String) {
