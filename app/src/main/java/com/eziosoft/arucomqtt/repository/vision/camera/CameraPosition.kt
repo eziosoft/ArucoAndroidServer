@@ -34,7 +34,6 @@
 
 package com.eziosoft.arucomqtt.repository.vision.camera
 
-import android.util.Log
 import com.eziosoft.arucomqtt.Cartesian
 import com.eziosoft.arucomqtt.MovingAverageFilter
 import com.eziosoft.arucomqtt.helpers.extensions.*
@@ -78,9 +77,7 @@ class CameraPosition @ExperimentalCoroutinesApi
         attitude: DeviceAttitudeProvider.Attitude,
         rotationMatrix: FloatArray
     ) {
-        Log.d(TAG, "onDeviceAttitude: ")
         rotationMatrixFromAcc = calculateRotationMatrixFromAccAngles(attitude)
-
     }
 
     fun calculateRotationMatrixFromAccAngles(deviceAttitude: DeviceAttitudeProvider.Attitude): Mat {
@@ -124,9 +121,9 @@ class CameraPosition @ExperimentalCoroutinesApi
 
         val marker = Marker(
             1003,
-            y = (camTvec[0, 0][0]),
-            x = (camTvec[1, 0][0]),
-            z = (camTvec[2, 0][0]),
+            y = camTvec[0, 0][0],
+            x = camTvec[1, 0][0],
+            z = camTvec[2, 0][0],
             rotation = rotationCam
         )
 
