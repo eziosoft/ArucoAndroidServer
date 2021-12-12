@@ -88,7 +88,6 @@ fun rotationMatrixFromEuler(
     return mat
 }
 
-
 fun rotationMatrixToEulerAngles(R: Mat): Marker.Rotation {
     val sy = sqrt(R[0, 0][0] * R[0, 0][0] + R[1, 0][0] * R[1, 0][0])
     val singular = sy < 1e-6

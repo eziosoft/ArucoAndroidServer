@@ -17,11 +17,9 @@
 
 package com.eziosoft.arucomqtt.repository.vision.map
 
-import com.eziosoft.arucomqtt.repository.vision.helpers.COLOR_GREEN
-import com.eziosoft.arucomqtt.repository.vision.helpers.SCALE_TO_DRAW
 import com.eziosoft.arucomqtt.repository.vision.Marker
+import com.eziosoft.arucomqtt.repository.vision.helpers.SCALE_TO_DRAW
 import com.google.gson.Gson
-import dagger.hilt.android.AndroidEntryPoint
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.Point
