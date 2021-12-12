@@ -150,7 +150,13 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             map.clear()
         }
 
-        mqtt.connectToBroker(BROKER_URL, "cliemt") { connected, error -> }
+        mqtt.connectToBroker(BROKER_URL, "cliemt") { connected, error ->
+            if (connected) {
+                mqtt.publishMessage(gson.toJson(map), "map", false) { sent, error -> }
+            }
+        }
+
+
     }
 
     public override fun onResume() {
