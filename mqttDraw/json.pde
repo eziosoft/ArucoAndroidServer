@@ -1,7 +1,7 @@
 void loadCam(String json) {
   JSONObject camObject = parseJSONObject(json);
   cam.set(camObject.getInt("x"), camObject.getInt("y"));
-  camHeading = camObject.getInt("heading");
+  camHeading = camObject.getFloat("heading");
   camPath.add(cam.copy());
 }
 

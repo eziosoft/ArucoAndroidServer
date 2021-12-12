@@ -1,7 +1,7 @@
 import mqtt.*;
 ArrayList<PVector> mapPoints;
 PVector cam = new PVector(0, 0);
-int camHeading = 0;
+float camHeading = 0;
 ArrayList<PVector> camPath = new ArrayList<PVector>();
 MQTTClient client;
 
@@ -39,7 +39,7 @@ void draw() {
   //cam
   stroke(0, 255, 0, 100);
   circle(cam.x/10, cam.y/10, 10);
-  line(cam.x/10, cam.y/10,(float)(cam.x/10+10*Math.sin(camHeading)), (float)(cam.y/10+10*Math.cos(camHeading)));
+  line(cam.x/10, cam.y/10,(float)(cam.x/10-10*Math.sin(camHeading)), (float)(cam.y/10-10*Math.cos(camHeading)));
   
 
   //cam path
@@ -48,6 +48,10 @@ void draw() {
     vertex(p.x/10, p.y/10);
   }
   endShape();
+}
+
+void mousePressed() {
+  camPath.clear();
 }
 
 void clientConnected() {
