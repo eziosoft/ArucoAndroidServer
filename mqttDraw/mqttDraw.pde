@@ -66,7 +66,7 @@ void messageReceived(String topic, byte[] payload) {
     loadCam( new String(payload));
   }
 
-  println("new message: " + topic + " - " + new String(payload));
+  //println("new message: " + topic + " - " + new String(payload));
 }
 
 void connectionLost() {
