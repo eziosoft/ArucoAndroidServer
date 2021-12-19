@@ -148,9 +148,10 @@ class Repository @Inject constructor(
     }
 
     var timer = 0L
+    var reportSensorsInterval = 250
     private fun processParsedSensors(sensors: List<RoombaParsedSensor>) {
         if (timer < System.currentTimeMillis()) {
-            timer = System.currentTimeMillis() + 250
+            timer = System.currentTimeMillis() + reportSensorsInterval
 
             sensorDataSet.clear()
             sensorDataSet.addAll(sensors)
