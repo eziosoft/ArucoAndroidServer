@@ -26,6 +26,8 @@ import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.arucomqtt.repository.roomba.RoombaSensorParser
 import com.eziosoft.arucomqtt.repository.vision.Marker
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
+import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration
 import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +48,11 @@ class Repository @Inject constructor(
     private val gson: Gson
 ) :
     RoombaSensorParser.SensorListener {
+
+    val cameraCalibrator = CameraCalibrator(
+        CameraConfiguration.CAMERA_WIDTH,
+        CameraConfiguration.CAMERA_HEIGH
+    )
 
     private val sensorDataSet = arrayListOf<RoombaParsedSensor>()
     private val _logFlow = MutableStateFlow<String>("")
@@ -80,9 +87,10 @@ class Repository @Inject constructor(
         }
     }
 
-    fun getSensorValue(id: Int): Int? {
+    private fun getSensorValue(id: Int): Int? {
         return sensorDataSet.find { it.sensorID == id }?.signedValue
     }
+
 
     fun connectToMQTT(url: String) {
         toLogFlow("connecting to $url")
@@ -159,7 +167,7 @@ class Repository @Inject constructor(
         publishMessage(gson.toJson(map), MQTT_MAP_TOPIC, retain)
     }
 
-    fun publishCameraLocation(marker:Marker) {
+    fun publishCameraLocation(marker: Marker) {
         publishMessage(gson.toJson(marker), MQTT_CAM_LOCATION_TOPIC, false)
     }
 
@@ -175,4 +183,8 @@ class Repository @Inject constructor(
     enum class ConnectionStatus {
         DISCONNECTED, CONNECTED
     }
+}
+
+fun List<RoombaParsedSensor>.getSensorValue(id: Int): Int? {
+    return this.find { it.sensorID == id }?.signedValue
 }

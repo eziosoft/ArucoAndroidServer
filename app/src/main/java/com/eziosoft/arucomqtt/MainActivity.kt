@@ -69,12 +69,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     lateinit var repository: Repository
 
     private lateinit var binding: ActivityMainBinding
-    private val cameraCalibrator = CameraCalibrator(
-        CAMERA_WIDTH,
-        CAMERA_HEIGH
-    )
-    var captureCalibrationFrame = false
-    var calibrate = false
+
+    private var captureCalibrationFrame = false
+    private var calibrate = false
 
     private val detectorParameters = DetectorParameters.create()
     private var frame = Mat()
@@ -167,12 +164,12 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         if (calibrate) {
             frame = inputFrame.rgba()
             val gray = inputFrame.gray()
-            cameraCalibrator.processFrame(gray, frame)
+            repository.cameraCalibrator.processFrame(gray, frame)
 
             if (captureCalibrationFrame) {
                 captureCalibrationFrame = false
-                cameraCalibrator.addCorners()
-                val calSummary = cameraCalibrator.calibrate()
+                repository.cameraCalibrator.addCorners()
+                val calSummary =  repository.cameraCalibrator.calibrate()
                 log(calSummary)
             }
             return frame
@@ -242,8 +239,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             Imgproc.undistort(
                 rgb,
                 mat,
-                cameraCalibrator.cameraMatrix,
-                cameraCalibrator.distortionCoefficients
+                repository.cameraCalibrator.cameraMatrix,
+                repository.cameraCalibrator.distortionCoefficients
             )
             mat
         } else {
