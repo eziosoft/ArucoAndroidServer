@@ -178,7 +178,7 @@ class Repository @Inject constructor(
         const val MQTT_TELEMETRY_TOPIC = "$MAIN_TOPIC/out"
         const val MQTT_STREAM_TOPIC = "$MAIN_TOPIC/stream"
         const val MQTT_MAP_TOPIC = "map"
-        const val MQTT_CAM_LOCATION_TOPIC = "map"
+        const val MQTT_CAM_LOCATION_TOPIC = "cam"
     }
 
     enum class ConnectionStatus {
