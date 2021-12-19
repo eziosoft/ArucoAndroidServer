@@ -40,10 +40,7 @@ import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfigu
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_WIDTH
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.DICTIONARY
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.MARKER_LENGTH
-import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
 import com.eziosoft.arucomqtt.repository.vision.helpers.*
-import com.eziosoft.arucomqtt.repository.vision.map.Map
-import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,14 +65,13 @@ import kotlin.math.*
 @ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
+    @Inject
+    lateinit var repository: Repository
 
     private lateinit var binding: ActivityMainBinding
-    private val cameraCalibrator = CameraCalibrator(
-        CAMERA_WIDTH,
-        CAMERA_HEIGH
-    )
-    var captureCalibrationFrame = false
-    var calibrate = false
+
+    private var captureCalibrationFrame = false
+    private var calibrate = false
 
     private val detectorParameters = DetectorParameters.create()
     private var frame = Mat()
@@ -85,18 +81,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val allCorners: MutableList<Mat> = ArrayList()
     private val rejected: MutableList<Mat> = ArrayList()
     private val markersList: MutableList<Marker> = ArrayList()
-
-    @Inject
-    lateinit var camera: CameraPosition
-
-    @Inject
-    lateinit var map: Map
-
-    @Inject
-    lateinit var repository: Repository
-
-    @Inject
-    lateinit var gson: Gson
 
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
@@ -137,10 +121,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         repository.connectToMQTT(BROKER_URL)
     }
 
-
     private fun setUpCollectors() {
         collectLatestLifecycleFLow(repository.connectionStatus) {
-            repository.publishMessage(gson.toJson(map), "map", retain = true)
+            repository.publishMap(true)
         }
     }
 
@@ -156,15 +139,14 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
 
         binding.mapB.setOnClickListener {
-            map.addPoint(camera.getLastCamera3Position())
-            repository.publishMessage(gson.toJson(map), "map")
+            repository.map.addPoint(repository.cameraPosition.getLastCamera3Position())
+            repository.publishMap(false)
         }
 
         binding.clearMapB.setOnClickListener {
-            map.clear()
+            repository.map.clear()
         }
     }
-
 
     public override fun onResume() {
         super.onResume()
@@ -182,19 +164,16 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         if (calibrate) {
             frame = inputFrame.rgba()
             val gray = inputFrame.gray()
-            cameraCalibrator.processFrame(gray, frame)
+            repository.cameraCalibrator.processFrame(gray, frame)
 
             if (captureCalibrationFrame) {
                 captureCalibrationFrame = false
-                cameraCalibrator.addCorners()
-                val calSummary = cameraCalibrator.calibrate()
+                repository.cameraCalibrator.addCorners()
+                val calSummary =  repository.cameraCalibrator.calibrate()
                 log(calSummary)
             }
             return frame
-
         } else {
-
-
             frame = inputFrame.rgba()
             cvtColor(frame, rgb, Imgproc.COLOR_BGRA2BGR) // Convert to BGR
 
@@ -247,7 +226,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 }
             }
 
-            map.draw(rgb, COLOR_RED)
+            repository.map.draw(rgb, COLOR_RED)
             processMarkers(rgb)
             drawCenterLines(rgb)
 
@@ -256,14 +235,14 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
 
         return if (binding.tryCalB.isChecked) {
-            val m = Mat()
+            val mat = Mat()
             Imgproc.undistort(
                 rgb,
-                m,
-                cameraCalibrator.cameraMatrix,
-                cameraCalibrator.distortionCoefficients
+                mat,
+                repository.cameraCalibrator.cameraMatrix,
+                repository.cameraCalibrator.distortionCoefficients
             )
-            m
+            mat
         } else {
             frame
         }
@@ -281,7 +260,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
             filteredMarker.draw(frame)
 
-            val cam1 = camera.calculateCameraPosition1(filteredMarker)
+            val cam1 = repository.cameraPosition.calculateCameraPosition1(filteredMarker)
             markersList.add(cam1)
             drawRobot(
                 rgb,
@@ -289,7 +268,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 COLOR_RED
             )
 
-            val cam2 = camera.calculateCameraPosition2(filteredMarker)
+            val cam2 = repository.cameraPosition.calculateCameraPosition2(filteredMarker)
             markersList.add(cam2)
             drawRobot(
                 rgb,
@@ -297,7 +276,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 COLOR_PINK
             )
 
-            cam3 = camera.calculateCameraPosition3(filteredMarker)
+            cam3 = repository.cameraPosition.calculateCameraPosition3(filteredMarker)
             markersList.add(cam3)
             drawRobot(
                 rgb,
@@ -317,7 +296,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
     private fun publishCameraLocation(cam: Marker) {
-        repository.publishMessage(gson.toJson(cam), "cam", true)
+        repository.publishCameraLocation(cam)
     }
 
     private fun log(str: String) {
@@ -357,7 +336,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         return false
     }
 
-
     public override fun onPause() {
         super.onPause()
         disableCamera()
@@ -369,8 +347,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
     companion object {
-        private const val TAG = "ARUCO"
+        private const val TAG = "aaa"
     }
 }
-
-
