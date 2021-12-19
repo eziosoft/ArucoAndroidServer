@@ -21,9 +21,13 @@
 package com.eziosoft.arucomqtt.repository
 
 import android.util.Log
+import com.eziosoft.arucomqtt.repository.map.Map
 import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.arucomqtt.repository.roomba.RoombaSensorParser
+import com.eziosoft.arucomqtt.repository.vision.Marker
+import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +41,9 @@ import javax.inject.Singleton
 class Repository @Inject constructor(
     private val mqtt: Mqtt,
     private val roombaSensorParser: RoombaSensorParser,
+    val map: Map,
+    val cameraPosition: CameraPosition,
+    private val gson: Gson
 ) :
     RoombaSensorParser.SensorListener {
 
@@ -148,11 +155,21 @@ class Repository @Inject constructor(
         _logFlow.value = string
     }
 
+    fun publishMap(retain: Boolean) {
+        publishMessage(gson.toJson(map), MQTT_MAP_TOPIC, retain)
+    }
+
+    fun publishCameraLocation(marker:Marker) {
+        publishMessage(gson.toJson(marker), MQTT_CAM_LOCATION_TOPIC, false)
+    }
+
     companion object {
         private const val MAIN_TOPIC = "tank"
         const val MQTT_CONTROL_TOPIC = "$MAIN_TOPIC/in"
         const val MQTT_TELEMETRY_TOPIC = "$MAIN_TOPIC/out"
         const val MQTT_STREAM_TOPIC = "$MAIN_TOPIC/stream"
+        const val MQTT_MAP_TOPIC = "map"
+        const val MQTT_CAM_LOCATION_TOPIC = "map"
     }
 
     enum class ConnectionStatus {
