@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.network.mqtt
+package com.eziosoft.mqtt_test.repository.mqtt
 
 
 import android.os.Build
@@ -24,6 +24,7 @@ import androidx.annotation.RequiresApi
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient
 import com.hivemq.client.mqtt.mqtt3.Mqtt3Client
 import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish
+import com.hivemq.client.mqtt.mqtt3.message.unsubscribe.Mqtt3Unsubscribe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -31,8 +32,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.function.Consumer
 import javax.inject.Inject
+import javax.inject.Singleton
 
 @RequiresApi(Build.VERSION_CODES.N)
+@Singleton
 class Mqtt @Inject constructor() {
     data class MqttMessage(val message: ByteArray, val topic: String)
 
@@ -69,6 +72,32 @@ class Mqtt @Inject constructor() {
             Log.d(TAG, "publish: empty message")
             messageBuilder.payload(byteArrayOf())
         }
+
+        val mqttMessage = messageBuilder.build()
+        client.toAsync().publish(mqttMessage)
+            .whenComplete { publishResult, throwable ->
+                if (throwable != null) {
+                    status(false, throwable)
+                } else {
+                    status(true, null)
+                }
+            }
+    }
+
+
+    fun publishMessage(
+        message: ByteArray,
+        topic: String,
+        retain: Boolean,
+        status: (messageSent: Boolean, throwable: Throwable?) -> Unit
+    ) {
+        val messageBuilder =
+            Mqtt3Publish.builder()
+                .topic(topic)
+                .retain(retain)
+
+        Log.d(TAG, "publish: ${String(message)}")
+        messageBuilder.payload(message)
 
         val mqttMessage = messageBuilder.build()
         client.toAsync().publish(mqttMessage)
@@ -128,17 +157,22 @@ class Mqtt @Inject constructor() {
                 status(true, null)
             }
         }
+
     }
 
-    fun disconnectFromBroker(status: (exception: Throwable?) -> Unit) {
-        client.disconnect().whenComplete { _, throwable ->
-            status(throwable)
+    fun disconnectFromBroker(status: (connected: Boolean, exception: Throwable?) -> Unit) {
+        client.disconnect().whenComplete { state, throwable ->
+            status(client.state.isConnected, throwable)
         }
     }
 
 
     fun subscribeToTopic(topic: String) =
         client.subscribeWith().topicFilter(topic).callback(newMessageCallback).send()
+
+    fun unsubscribe(topic: String) =
+        client.unsubscribe(Mqtt3Unsubscribe.builder().topicFilter(topic).build())
+
 
     private val newMessageCallback =
         Consumer<Mqtt3Publish> { message ->

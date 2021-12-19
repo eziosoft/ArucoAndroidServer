@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.network.mqtt
+package com.eziosoft.arucomqtt.repository.mqtt
 
 data class MarkerMqtt(
     val x: Double,
