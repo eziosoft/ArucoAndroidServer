@@ -17,64 +17,65 @@
 package com.eziosoft.arucomqtt
 
 import android.Manifest
-import androidx.appcompat.app.AppCompatActivity
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2
-import org.opencv.aruco.Aruco
-import org.opencv.aruco.DetectorParameters
-import android.widget.Toast
-import org.opencv.android.BaseLoaderCallback
-import org.opencv.android.LoaderCallbackInterface
-import android.os.Bundle
-import android.view.WindowManager
-import android.view.SurfaceView
-import org.opencv.android.OpenCVLoader
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame
-import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
+import android.os.Bundle
 import android.util.Log
+import android.view.SurfaceView
+import android.view.WindowManager
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
+import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
+import com.eziosoft.arucomqtt.helpers.extensions.collectLatestLifecycleFLow
+import com.eziosoft.arucomqtt.repository.Repository
+import com.eziosoft.arucomqtt.repository.mqtt.BROKER_URL
+import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_DISTORTION
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_FRONT
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_HEIGH
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_MATRIX
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_WIDTH
-import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
-import com.eziosoft.arucomqtt.network.mqtt.BROKER_URL
-import com.eziosoft.arucomqtt.network.mqtt.Mqtt
-import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.DICTIONARY
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.MARKER_LENGTH
+import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
 import com.eziosoft.arucomqtt.repository.vision.helpers.*
 import com.eziosoft.arucomqtt.repository.vision.map.Map
 import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import org.opencv.android.BaseLoaderCallback
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2
+import org.opencv.android.LoaderCallbackInterface
+import org.opencv.android.OpenCVLoader
+import org.opencv.aruco.Aruco
+import org.opencv.aruco.DetectorParameters
 import org.opencv.core.*
 import org.opencv.core.CvType.CV_32FC1
 import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.cvtColor
-
 import java.util.*
 import javax.inject.Inject
 import kotlin.math.*
 
 
+@ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
     private lateinit var binding: ActivityMainBinding
-    val cameraCalibrator = CameraCalibrator(
+    private val cameraCalibrator = CameraCalibrator(
         CAMERA_WIDTH,
         CAMERA_HEIGH
     )
     var captureCalibrationFrame = false
     var calibrate = false
-
 
     private val detectorParameters = DetectorParameters.create()
     private var frame = Mat()
@@ -92,7 +93,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     lateinit var map: Map
 
     @Inject
-    lateinit var mqtt: Mqtt
+    lateinit var repository: Repository
 
     @Inject
     lateinit var gson: Gson
@@ -116,7 +117,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
     }
 
-
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -131,6 +131,20 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             cameraView.setCvCameraViewListener(this@MainActivity)
         }
 
+        setupListeners()
+        setUpCollectors()
+
+        repository.connectToMQTT(BROKER_URL)
+    }
+
+
+    private fun setUpCollectors() {
+        collectLatestLifecycleFLow(repository.connectionStatus) {
+            repository.publishMessage(gson.toJson(map), "map", retain = true)
+        }
+    }
+
+    private fun setupListeners() {
         binding.captureB.setOnClickListener {
             captureCalibrationFrame = true
         }
@@ -143,21 +157,14 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
         binding.mapB.setOnClickListener {
             map.addPoint(camera.getLastCamera3Position())
-            mqtt.publishMessage(gson.toJson(map), "map", false) { sent, error -> }
+            repository.publishMessage(gson.toJson(map), "map")
         }
 
         binding.clearMapB.setOnClickListener {
             map.clear()
         }
-
-        mqtt.connectToBroker(BROKER_URL, "cliemt") { connected, error ->
-            if (connected) {
-                mqtt.publishMessage(gson.toJson(map), "map", true) { sent, error -> }
-            }
-        }
-
-
     }
+
 
     public override fun onResume() {
         super.onResume()
@@ -307,12 +314,10 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             cam3,
             COLOR_GREEN
         )
-
-
     }
 
     private fun publishCameraLocation(cam: Marker) {
-        mqtt.publishMessage(gson.toJson(cam), "cam", true) { s, e -> }
+        repository.publishMessage(gson.toJson(cam), "cam", true)
     }
 
     private fun log(str: String) {

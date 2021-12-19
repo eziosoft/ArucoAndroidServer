@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.network.mqtt
+package com.eziosoft.arucomqtt.repository.mqtt
 
 const val BROKER_URL = "192.168.0.19"
 const val MAIN_TOPIC = "robot/positionC"
