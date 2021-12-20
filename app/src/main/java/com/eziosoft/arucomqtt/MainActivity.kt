@@ -31,6 +31,7 @@ import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.helpers.extensions.collectLatestLifecycleFLow
 import com.eziosoft.arucomqtt.repository.Repository
 import com.eziosoft.arucomqtt.repository.mqtt.BROKER_URL
+import com.eziosoft.arucomqtt.repository.navigation.headingTo
 import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_DISTORTION
@@ -293,6 +294,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             cam3,
             COLOR_GREEN
         )
+
+        val navTest = Marker(999, cam3.x, cam3.y, cam3.z, heading = cam3.headingTo(Marker()))
+        drawRobot(rgb, navTest, COLOR_WHITE)
     }
 
     private fun publishCameraLocation(cam: Marker) {
