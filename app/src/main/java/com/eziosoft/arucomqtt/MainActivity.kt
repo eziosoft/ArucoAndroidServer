@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             if (captureCalibrationFrame) {
                 captureCalibrationFrame = false
                 repository.cameraCalibrator.addCorners()
-                val calSummary =  repository.cameraCalibrator.calibrate()
+                val calSummary = repository.cameraCalibrator.calibrate()
                 log(calSummary)
             }
             return frame
@@ -263,19 +263,19 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
             val cam1 = repository.cameraPosition.calculateCameraPosition1(filteredMarker)
             markersList.add(cam1)
-            drawRobot(
-                rgb,
-                cam1,
-                COLOR_RED
-            )
+//            drawRobot(
+//                rgb,
+//                cam1,
+//                COLOR_RED
+//            )
 
             val cam2 = repository.cameraPosition.calculateCameraPosition2(filteredMarker)
             markersList.add(cam2)
-            drawRobot(
-                rgb,
-                cam2,
-                COLOR_PINK
-            )
+//            drawRobot(
+//                rgb,
+//                cam2,
+//                COLOR_PINK
+//            )
 
             cam3 = repository.cameraPosition.calculateCameraPosition3(filteredMarker)
             markersList.add(cam3)
@@ -295,7 +295,13 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             COLOR_GREEN
         )
 
-        val navTest = Marker(999, cam3.x, cam3.y, cam3.z, heading = cam3.headingTo(Marker()))
+        val navTest = Marker(
+            999,
+            cam3.x,
+            cam3.y,
+            cam3.z,
+            rotation = Marker.Rotation(0.0, 0.0, Marker().headingTo(cam3))
+        )
         drawRobot(rgb, navTest, COLOR_WHITE)
     }
 
