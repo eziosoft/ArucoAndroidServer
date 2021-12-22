@@ -24,6 +24,7 @@ import com.eziosoft.arucomqtt.helpers.extensions.addAngleRadians
 import com.eziosoft.arucomqtt.helpers.extensions.normalizeAngle
 import com.eziosoft.arucomqtt.helpers.extensions.round
 import com.eziosoft.arucomqtt.helpers.extensions.toDegree
+import com.eziosoft.arucomqtt.repository.vision.helpers.COLOR_WHITE
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
@@ -84,13 +85,13 @@ data class Marker(
 
     private fun getHeadingAngleFromPixels(corners: Mat): Double {
         val up = getMarkerFront(corners)
-        return atan2(up.x - centerInPixels.x, up.y - centerInPixels.y)
+        return atan2(centerInPixels.x - up.x, centerInPixels.y - up.y)
     }
 
     private fun getMarkerFront(corners: Mat): Point {
         var x = 0.0
         var y = 0.0
-        for (i in 0..1) {
+        for (i in 2..3) {
             x += corners[0, i][0]
             y += corners[0, i][1]
         }

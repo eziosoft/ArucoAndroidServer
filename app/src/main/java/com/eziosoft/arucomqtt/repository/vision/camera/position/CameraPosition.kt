@@ -32,7 +32,6 @@ import org.opencv.core.Mat
 import org.opencv.core.Scalar
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.PI
 
 @ExperimentalCoroutinesApi
 @Singleton
@@ -64,10 +63,13 @@ class CameraPosition @ExperimentalCoroutinesApi
         attitude: DeviceAttitudeProvider.Attitude,
         rotationMatrix: FloatArray
     ) {
-        rotationMatrixFromAcc = calculateRotationMatrixFromAccAngles(attitude)
+        rotationMatrixFromAcc = calculateRotationMatrixFromAccAngles(attitude, cam2.heading)
     }
 
-    fun calculateRotationMatrixFromAccAngles(deviceAttitude: DeviceAttitudeProvider.Attitude): Mat {
+    fun calculateRotationMatrixFromAccAngles(
+        deviceAttitude: DeviceAttitudeProvider.Attitude,
+        cam2Heading: Double
+    ): Mat {
         val attitudeCorrected = DeviceAttitudeProvider.Attitude(
             deviceAttitude.azimuth,
             deviceAttitude.roll.toRadian().invertAngleRadians().normalizeAngle().toDegree(),
@@ -77,7 +79,7 @@ class CameraPosition @ExperimentalCoroutinesApi
         return rotationMatrixFromEuler(
             attitudeCorrected.pitch.toRadian(),
             attitudeCorrected.roll.toRadian(),
-            cam2.heading //use heading from camera2 from marker not from compass
+            cam2Heading.invertAngleRadians() //use heading from camera2 from marker not from compass
             //            attitudeCorrected.azimuth.toRadian().addAngleRadians(10.0.toRadian())
             //                .normalizeAngle()
         )
@@ -88,7 +90,7 @@ class CameraPosition @ExperimentalCoroutinesApi
     fun getLastCamera3Position() = cam3
 
     private var rotationMatrixFromAcc = Mat(3, 3, CvType.CV_64F)
-    fun calculateCameraPosition3(cam: Marker): Marker {
+    fun calculateCameraPosition3(marker: Marker): Marker {
         val camR = rotationMatrixFromAcc
 
         val _camR = Mat()
@@ -96,17 +98,18 @@ class CameraPosition @ExperimentalCoroutinesApi
         Core.multiply(camR, _1, _camR)
 
         val tvec_conv = Mat(3, 1, CvType.CV_64F)
-        tvec_conv.put(0, 0, cam.tvec?.get(0, 0)?.get(0)!!)
-        tvec_conv.put(1, 0, cam.tvec.get(0, 0)?.get(1)!!)
-        tvec_conv.put(2, 0, cam.tvec[0, 0][2])
+        tvec_conv.put(0, 0, marker.tvec?.get(0, 0)?.get(0)!!)
+        tvec_conv.put(1, 0, marker.tvec.get(0, 0)?.get(1)!!)
+        tvec_conv.put(2, 0, marker.tvec[0, 0][2])
 
 
         val camTvec = Mat(1, 3, CvType.CV_64F)
         Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
 
         val rotationCam = rotationMatrixToEulerAngles(camR)
+        rotationCam.z = rotationCam.z.invertAngleRadians()
 
-        val marker = Marker(
+        val cam = Marker(
             1003,
             y = filterYcam3.add(-camTvec[0, 0][0]),
             x = filterXcam3.add(camTvec[1, 0][0]),
@@ -119,13 +122,13 @@ class CameraPosition @ExperimentalCoroutinesApi
         _camR.release()
         tvec_conv.release()
 
-        cam3 = marker
-        return marker
+        cam3 = cam
+        return cam
     }
 
-    fun calculateCameraPosition2(cam: Marker): Marker {
+    fun calculateCameraPosition2(marker: Marker): Marker {
         val R = Mat(3, 3, CvType.CV_32FC1)
-        Calib3d.Rodrigues(cam.rvec, R)
+        Calib3d.Rodrigues(marker.rvec, R)
         val camR = R.t()
 
         val _camR = Mat()
@@ -133,18 +136,18 @@ class CameraPosition @ExperimentalCoroutinesApi
         Core.multiply(camR, _1, _camR)
 
         val tvec_conv = Mat(3, 1, CvType.CV_64F)
-        tvec_conv.put(0, 0, cam.tvec?.get(0, 0)?.get(0)!!)
-        tvec_conv.put(1, 0, cam.tvec.get(0, 0)?.get(1)!!)
-        tvec_conv.put(2, 0, cam.tvec[0, 0][2])
+        tvec_conv.put(0, 0, marker.tvec?.get(0, 0)?.get(0)!!)
+        tvec_conv.put(1, 0, marker.tvec.get(0, 0)?.get(1)!!)
+        tvec_conv.put(2, 0, marker.tvec[0, 0][2])
 
 
         val camTvec = Mat(1, 3, CvType.CV_64F)
         Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
 
         val rotationCam = rotationMatrixToEulerAngles(camR)
-        rotationCam.offsetZ(PI_2)
+        rotationCam.z = rotationCam.z.invertAngleRadians() + PI_2.normalizeAngle()
 
-        val marker = Marker(
+        val cam = Marker(
             1002,
             x = filterXcam2.add(camTvec[0, 0][0]),
             y = filterYcam2.add(camTvec[1, 0][0]),
@@ -158,8 +161,8 @@ class CameraPosition @ExperimentalCoroutinesApi
         tvec_conv.release()
         R.release()
 
-        cam2 = marker
-        return marker
+        cam2 = cam
+        return cam
     }
 
     fun calculateCameraPosition1(marker: Marker): Marker {
@@ -172,7 +175,7 @@ class CameraPosition @ExperimentalCoroutinesApi
         c = p.toCartesian()
 
         val cam = Marker(1001, c.x, -c.y, marker.z, null)
-        cam.heading = 2 * PI - marker.heading.addAngleRadians(PI / 2)
+        cam.heading = marker.heading.addAngleRadians(PI_2).invertAngleRadians().normalizeAngle()
         cam1 = cam
         return cam
     }

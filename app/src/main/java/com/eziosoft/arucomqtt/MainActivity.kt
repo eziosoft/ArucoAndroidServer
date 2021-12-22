@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.helpers.extensions.collectLatestLifecycleFLow
+import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
 import com.eziosoft.arucomqtt.repository.Repository
 import com.eziosoft.arucomqtt.repository.mqtt.BROKER_URL
 import com.eziosoft.arucomqtt.repository.navigation.headingTo
@@ -222,7 +223,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                         tvec = tvec
                     )
 
-                    // Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
+                     Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
                     markersList.add(marker)
                 }
             }
@@ -263,19 +264,19 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
             val cam1 = repository.cameraPosition.calculateCameraPosition1(filteredMarker)
             markersList.add(cam1)
-//            drawRobot(
-//                rgb,
-//                cam1,
-//                COLOR_RED
-//            )
+            drawRobot(
+                rgb,
+                cam1,
+                COLOR_RED
+            )
 
             val cam2 = repository.cameraPosition.calculateCameraPosition2(filteredMarker)
             markersList.add(cam2)
-//            drawRobot(
-//                rgb,
-//                cam2,
-//                COLOR_PINK
-//            )
+            drawRobot(
+                rgb,
+                cam2,
+                COLOR_PINK
+            )
 
             cam3 = repository.cameraPosition.calculateCameraPosition3(filteredMarker)
             markersList.add(cam3)
@@ -289,20 +290,16 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             publishCameraLocation(cam3)
         }
 
+
+        val headingToTarget = cam3.headingTo(Marker())
         drawRobot(
             rgb,
             cam3,
-            COLOR_GREEN
+            COLOR_GREEN,
+            headingToTarget.invertAngleRadians()
         )
 
-        val navTest = Marker(
-            999,
-            cam3.x,
-            cam3.y,
-            cam3.z,
-            rotation = Marker.Rotation(0.0, 0.0, Marker().headingTo(cam3))
-        )
-        drawRobot(rgb, navTest, COLOR_WHITE)
+
     }
 
     private fun publishCameraLocation(cam: Marker) {

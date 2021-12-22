@@ -57,7 +57,7 @@ fun drawPath(frame: Mat) {
 }
 
 @Suppress("MagicNumber")
-fun drawRobot(frame: Mat, marker: Marker, color: Scalar) {
+fun drawRobot(frame: Mat, marker: Marker, color: Scalar, headingToTarget: Double? = null) {
     val offsetX: Double = frame.width() / 2.0
     val offsetY: Double = frame.height() / 2.0
 
@@ -70,12 +70,26 @@ fun drawRobot(frame: Mat, marker: Marker, color: Scalar) {
         frame,
         p,
         Point(
-            p.x + 50 * sin(-marker.heading.invertAngleRadians()),
-            p.y + 50 * cos(-marker.heading.invertAngleRadians())
+            p.x + 50 * sin(marker.heading),
+            p.y + 50 * cos(marker.heading)
         ),
         color,
-        2
+        3
     )
+
+    if (headingToTarget != null) {
+        Imgproc.line(
+            frame,
+            p,
+            Point(
+                p.x + 80 * sin(headingToTarget),
+                p.y + 80 * cos(headingToTarget)
+            ),
+            COLOR_WHITE,
+            2
+        )
+    }
+
     Imgproc.putText(frame, marker.id.toString(), p, 1, 2.0, COLOR_WHITE)
 }
 
