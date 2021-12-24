@@ -278,7 +278,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 COLOR_PINK
             )
 
-            cam3 = repository.cameraPosition.calculateCameraPosition3(filteredMarker)
+            cam3 = repository.cameraPosition.calculateCameraPosition3(filteredMarker, cam2)
             markersList.add(cam3)
             drawRobot(
                 rgb,

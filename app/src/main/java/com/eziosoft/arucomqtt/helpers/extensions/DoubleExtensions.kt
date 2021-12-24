@@ -20,17 +20,19 @@ package com.eziosoft.arucomqtt.helpers.extensions
 import kotlin.math.PI
 
 
-
 const val TWO_PI = 2 * PI
 const val PI_2 = PI / 2
 
 fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDouble()
+
 @Suppress("MagicNumber")
 fun Double.toRadian(): Double = this / 180 * Math.PI
+
 @Suppress("MagicNumber")
 fun Double.toDegree(): Double = this * 180.0 / Math.PI
 fun Float.toDegree(): Double = this * 180.0 / Math.PI
 fun Double.invertAngleRadians() = (this + Math.PI) % TWO_PI
+fun Double.mirrorAngleRadians() = (TWO_PI - this) % TWO_PI
 fun Double.addAngleRadians(angleRadians: Double) = (this + angleRadians) % TWO_PI
 
 fun Double.normalizeAngle(): Double {

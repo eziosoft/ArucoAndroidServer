@@ -32,6 +32,7 @@ import org.opencv.core.Mat
 import org.opencv.core.Scalar
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.PI
 
 @ExperimentalCoroutinesApi
 @Singleton
@@ -53,6 +54,7 @@ class CameraPosition @ExperimentalCoroutinesApi
     private var cam2 = Marker(1002, 0.0, 0.0, 0.0)
     private lateinit var cam3: Marker
 
+    private lateinit var currentDeviceAttitude: DeviceAttitudeProvider.Attitude
 
     init {
         deviceAttitudeProvider.setDeviceAttitudeListener(this)
@@ -63,23 +65,29 @@ class CameraPosition @ExperimentalCoroutinesApi
         attitude: DeviceAttitudeProvider.Attitude,
         rotationMatrix: FloatArray
     ) {
-        rotationMatrixFromAcc = calculateRotationMatrixFromAccAngles(attitude, cam2.heading)
+        currentDeviceAttitude = attitude
+
+//        if (cam2.rotation != null) {
+//            rotationMatrixFromAcc =
+//                calculateRotationMatrixFromAccAngles(attitude, cam2.rotation!!.z)
+//        }
     }
 
-    fun calculateRotationMatrixFromAccAngles(
+    private fun calculateRotationMatrixFromAccAngles(
         deviceAttitude: DeviceAttitudeProvider.Attitude,
         cam2Heading: Double
     ): Mat {
         val attitudeCorrected = DeviceAttitudeProvider.Attitude(
             deviceAttitude.azimuth,
             deviceAttitude.roll.toRadian().invertAngleRadians().normalizeAngle().toDegree(),
-            -deviceAttitude.pitch
+            deviceAttitude.pitch
         )
 
         return rotationMatrixFromEuler(
             attitudeCorrected.pitch.toRadian(),
             attitudeCorrected.roll.toRadian(),
-            cam2Heading.invertAngleRadians() //use heading from camera2 from marker not from compass
+            cam2Heading
+            //use heading from camera2 from marker not from compass
             //            attitudeCorrected.azimuth.toRadian().addAngleRadians(10.0.toRadian())
             //                .normalizeAngle()
         )
@@ -89,9 +97,15 @@ class CameraPosition @ExperimentalCoroutinesApi
     fun getLastCamera2Position() = cam2
     fun getLastCamera3Position() = cam3
 
-    private var rotationMatrixFromAcc = Mat(3, 3, CvType.CV_64F)
-    fun calculateCameraPosition3(marker: Marker): Marker {
-        val camR = rotationMatrixFromAcc
+    //    private var rotationMatrixFromAcc = Mat(3, 3, CvType.CV_64F)
+    fun calculateCameraPosition3(marker: Marker, cam2: Marker): Marker {
+//    val rotationMatrixFromAcc = Mat(3, 3, CvType.CV_64F)
+        val camR = calculateRotationMatrixFromAccAngles(
+            currentDeviceAttitude,
+            cam2.rotation!!.z.addAngleRadians(
+                PI_2
+            ).invertAngleRadians().normalizeAngle()
+        )
 
         val _camR = Mat()
         val _1 = Scalar(-1.0)
@@ -107,7 +121,7 @@ class CameraPosition @ExperimentalCoroutinesApi
         Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
 
         val rotationCam = rotationMatrixToEulerAngles(camR)
-        rotationCam.z = rotationCam.z.invertAngleRadians()
+        rotationCam.z = rotationCam.z
 
         val cam = Marker(
             1003,
@@ -145,7 +159,9 @@ class CameraPosition @ExperimentalCoroutinesApi
         Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
 
         val rotationCam = rotationMatrixToEulerAngles(camR)
-        rotationCam.z = rotationCam.z.invertAngleRadians() + PI_2.normalizeAngle()
+//        rotationCam.z =
+//            rotationCam.z.addAngleRadians(PI_2).mirrorAngleRadians().invertAngleRadians()
+//                .normalizeAngle()
 
         val cam = Marker(
             1002,
