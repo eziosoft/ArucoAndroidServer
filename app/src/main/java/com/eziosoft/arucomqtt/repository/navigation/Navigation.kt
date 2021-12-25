@@ -17,29 +17,17 @@
 
 package com.eziosoft.arucomqtt.repository.navigation
 
-import com.eziosoft.arucomqtt.helpers.extensions.normalizeAngle
-import com.eziosoft.arucomqtt.repository.vision.Marker
-import org.opencv.core.Mat
-import kotlin.math.atan2
-import kotlin.math.pow
-import kotlin.math.sqrt
-
 class Navigation {
 
 
-    fun navigate(frame: Mat, robot: Marker, target: Marker) {
-        val distance = robot.distanceTo(target)
-        val headingToTarget = robot.headingTo(target)
-
-    }
+//    fun navigate(frame: Mat, robot: Marker, target: Marker) {
+//        val distance = robot.distanceTo(target)
+//        val headingToTarget = robot.headingTo(target)
+//
+//    }
 
 
     companion object {
         const val WP_RADIUS = 10.0
     }
 }
-
-fun Marker.distanceTo(marker: Marker): Double =
-    sqrt((this.x - marker.x).pow(2) + (this.y - marker.y).pow(2))
-
-fun Marker.headingTo(marker: Marker) = atan2(this.x - marker.x, this.y - marker.y).normalizeAngle()

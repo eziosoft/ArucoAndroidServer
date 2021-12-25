@@ -27,6 +27,8 @@ import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
 import kotlin.math.*
 
+
+
 data class Marker2(
     val id: Int = -1,
     val position3d: Position3d,

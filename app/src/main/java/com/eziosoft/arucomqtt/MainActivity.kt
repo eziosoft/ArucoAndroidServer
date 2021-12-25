@@ -29,12 +29,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.helpers.extensions.collectLatestLifecycleFLow
-import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
 import com.eziosoft.arucomqtt.repository.Repository
 import com.eziosoft.arucomqtt.repository.mqtt.BROKER_URL
-import com.eziosoft.arucomqtt.repository.navigation.headingTo
-import com.eziosoft.arucomqtt.repository.vision.Marker
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
+import com.eziosoft.arucomqtt.repository.vision.Marker2
+import com.eziosoft.arucomqtt.repository.vision.Matrices
+import com.eziosoft.arucomqtt.repository.vision.Position3d
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_DISTORTION
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_FRONT
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_HEIGH
@@ -82,7 +81,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val ids = Mat()
     private val allCorners: MutableList<Mat> = ArrayList()
     private val rejected: MutableList<Mat> = ArrayList()
-    private val markersList: MutableList<Marker> = ArrayList()
+    private val markersList: MutableList<Marker2> = ArrayList()
 
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
@@ -213,17 +212,21 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                         tvec
                     )
 
-                    val marker = Marker(
+                    val marker = Marker2(
                         id = id,
-                        x = tvec[0, 0][0],
-                        y = tvec[0, 0][1],
-                        z = tvec[0, 0][2],
-                        corners = markerCorners,
-                        rvec = rvec,
-                        tvec = tvec
+                        Position3d(
+                            x = tvec[0, 0][0],
+                            y = tvec[0, 0][1],
+                            z = tvec[0, 0][2]
+                        ), null,
+                        Matrices(
+                            corners = markerCorners,
+                            rvec = rvec,
+                            tvec = tvec
+                        )
                     )
 
-                     Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
+                    Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
                     markersList.add(marker)
                 }
             }
