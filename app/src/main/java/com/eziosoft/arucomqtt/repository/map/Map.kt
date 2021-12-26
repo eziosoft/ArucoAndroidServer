@@ -17,7 +17,7 @@
 
 package com.eziosoft.arucomqtt.repository.map
 
-import com.eziosoft.arucomqtt.repository.vision.Marker
+import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import com.eziosoft.arucomqtt.repository.vision.helpers.SCALE_TO_DRAW
 import com.google.gson.Gson
 import org.opencv.core.Mat
@@ -34,8 +34,8 @@ class Map @Inject constructor(gson: Gson) {
         points = gson.fromJson(JSON_MAP, Map::class.java).points
     }
 
-    fun addPoint(marker: Marker) {
-        points.add(Point(marker.x, marker.y))
+    fun addPoint(camera: Camera) {
+        points.add(Point(camera.position3d.x, camera.position3d.y))
     }
 
     fun clear() {

@@ -19,7 +19,8 @@
 package com.eziosoft.arucomqtt.repository.vision.helpers
 
 import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
-import com.eziosoft.arucomqtt.repository.vision.Marker
+import com.eziosoft.arucomqtt.repository.vision.Marker2
+import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.Point
@@ -31,13 +32,13 @@ import kotlin.math.sin
 const val SCALE_TO_DRAW = 10
 private val path = mutableListOf<Point>() //to draw a path
 
-fun Marker.addToPath(frame: Mat) {
+fun Camera.addToPath(frame: Mat) {
     val offsetX: Double = frame.width() / 2.0
     val offsetY: Double = frame.height() / 2.0
     path.add(
         Point(
-            this.x / SCALE_TO_DRAW + offsetX,
-            this.y / SCALE_TO_DRAW + offsetY
+            this.position3d.x / SCALE_TO_DRAW + offsetX,
+            this.position3d.y / SCALE_TO_DRAW + offsetY
         )
     )
 }
@@ -57,21 +58,21 @@ fun drawPath(frame: Mat) {
 }
 
 @Suppress("MagicNumber")
-fun drawRobot(frame: Mat, marker: Marker, color: Scalar, headingToTarget: Double? = null) {
+fun drawRobot(frame: Mat, camera: Camera, color: Scalar, headingToTarget: Double? = null) {
     val offsetX: Double = frame.width() / 2.0
     val offsetY: Double = frame.height() / 2.0
 
     val p = Point(
-        marker.x / SCALE_TO_DRAW + offsetX,
-        marker.y / SCALE_TO_DRAW + offsetY
+        camera.position3d.x / SCALE_TO_DRAW + offsetX,
+        camera.position3d.y / SCALE_TO_DRAW + offsetY
     )
     Imgproc.circle(frame, p, 10, color, 2)
     Imgproc.line(
         frame,
         p,
         Point(
-            p.x + 50 * sin(marker.heading),
-            p.y + 50 * cos(marker.heading)
+            p.x + 50 * sin(camera.rotation.z),
+            p.y + 50 * cos(camera.rotation.z)
         ),
         color,
         3
@@ -90,17 +91,17 @@ fun drawRobot(frame: Mat, marker: Marker, color: Scalar, headingToTarget: Double
         )
     }
 
-    Imgproc.putText(frame, marker.id.toString(), p, 1, 2.0, COLOR_WHITE)
+    Imgproc.putText(frame, camera.id.toString(), p, 1, 2.0, COLOR_WHITE)
 }
 
 // TODO NOT WORKING
-fun drawMarkerOnMap(frame: Mat, marker: Marker, color: Scalar) {
+fun drawMarkerOnMap(frame: Mat, marker: Marker2, color: Scalar) {
     val offsetX: Double = frame.width() / 2.0
     val offsetY: Double = frame.height() / 2.0
 
     val p = Point(
-        marker.x / SCALE_TO_DRAW + offsetX,
-        marker.y / SCALE_TO_DRAW + offsetY
+        marker.rotation.x / SCALE_TO_DRAW + offsetX,
+        marker.rotation.y / SCALE_TO_DRAW + offsetY
     )
     Imgproc.rectangle(
         frame,
@@ -113,8 +114,8 @@ fun drawMarkerOnMap(frame: Mat, marker: Marker, color: Scalar) {
         frame,
         p,
         Point(
-            p.x + 10 * sin(-marker.heading.invertAngleRadians()),
-            p.y + 10 * cos(-marker.heading.invertAngleRadians())
+            p.x + 10 * sin(-marker.rotation.z.invertAngleRadians()),
+            p.y + 10 * cos(-marker.rotation.z.invertAngleRadians())
         ),
         color,
         2
