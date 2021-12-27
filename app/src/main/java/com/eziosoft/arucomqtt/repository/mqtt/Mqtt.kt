@@ -65,7 +65,7 @@ class Mqtt @Inject constructor() {
                 .topic(topic)
                 .retain(retain)
 
-        Log.d(TAG, "publish: $message")
+//        Log.d(TAG, "publish: $message")
         if (message != null) {
             messageBuilder.payload(message.toByteArray())
         } else {
