@@ -51,9 +51,6 @@ class CameraPosition @ExperimentalCoroutinesApi
     private val filterYcam3 = MovingAverageFilter(5)
     private val filterZcam3 = MovingAverageFilter(1)
 
-//
-//    private lateinit var cam1: Camera
-//    private var cam2 = Marker(1002, 0.0, 0.0, 0.0)
     private lateinit var cam3: Camera
 
     private lateinit var currentDeviceAttitude: DeviceAttitudeProvider.Attitude
@@ -68,11 +65,6 @@ class CameraPosition @ExperimentalCoroutinesApi
         rotationMatrix: FloatArray
     ) {
         currentDeviceAttitude = attitude
-
-//        if (cam2.rotation != null) {
-//            rotationMatrixFromAcc =
-//                calculateRotationMatrixFromAccAngles(attitude, cam2.rotation!!.z)
-//        }
     }
 
     private fun calculateRotationMatrixFromAccAngles(
@@ -82,7 +74,7 @@ class CameraPosition @ExperimentalCoroutinesApi
         val attitudeCorrected = DeviceAttitudeProvider.Attitude(
             deviceAttitude.azimuth,
             deviceAttitude.roll.toRadian().invertAngleRadians().normalizeAngle().toDegree(),
-            deviceAttitude.pitch
+            -deviceAttitude.pitch
         )
 
         return rotationMatrixFromEuler(
@@ -90,24 +82,16 @@ class CameraPosition @ExperimentalCoroutinesApi
             attitudeCorrected.roll.toRadian(),
             cam2Heading
             //use heading from camera2 from marker not from compass
-            //            attitudeCorrected.azimuth.toRadian().addAngleRadians(10.0.toRadian())
-            //                .normalizeAngle()
         )
     }
 
-//    fun getLastCamera1Position() = cam1
-//    fun getLastCamera2Position() = cam2
     fun getLastCamera3Position() = cam3
 
-    //    private var rotationMatrixFromAcc = Mat(3, 3, CvType.CV_64F)
     fun calculateCameraPosition3(marker: Marker2, cam2: Camera): Camera {
-//    val rotationMatrixFromAcc = Mat(3, 3, CvType.CV_64F)
         val camR = calculateRotationMatrixFromAccAngles(
             currentDeviceAttitude,
-            cam2.rotation.z.invertAngleRadians()
+            cam2.rotation.z
         )
-//        rotationCam.z.addAngleRadians(PI_2).mirrorAngleRadians().invertAngleRadians()
-//            .normalizeAngle()
 
         val _camR = Mat()
         val _1 = Scalar(-1.0)
@@ -163,9 +147,6 @@ class CameraPosition @ExperimentalCoroutinesApi
         Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
 
         val rotationCam = rotationMatrixToEulerAngles(camR)
-//        rotationCam.z =
-//            rotationCam.z.addAngleRadians(PI_2).mirrorAngleRadians().invertAngleRadians()
-//                .normalizeAngle()
 
         val cam = Camera(
             1002, Position3d(
@@ -181,8 +162,6 @@ class CameraPosition @ExperimentalCoroutinesApi
         _camR.release()
         tvec_conv.release()
         R.release()
-
-//        cam2 = cam
         return cam
     }
 
