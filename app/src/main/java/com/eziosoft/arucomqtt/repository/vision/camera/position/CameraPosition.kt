@@ -104,10 +104,10 @@ class CameraPosition @ExperimentalCoroutinesApi
 //    val rotationMatrixFromAcc = Mat(3, 3, CvType.CV_64F)
         val camR = calculateRotationMatrixFromAccAngles(
             currentDeviceAttitude,
-            cam2.rotation.z.addAngleRadians(
-                PI_2
-            ).invertAngleRadians().normalizeAngle()
+            cam2.rotation.z.invertAngleRadians()
         )
+//        rotationCam.z.addAngleRadians(PI_2).mirrorAngleRadians().invertAngleRadians()
+//            .normalizeAngle()
 
         val _camR = Mat()
         val _1 = Scalar(-1.0)
@@ -128,8 +128,8 @@ class CameraPosition @ExperimentalCoroutinesApi
         val cam = Camera(
             1003,
             Position3d(
-                y = filterYcam3.add(-camTvec[0, 0][0]),
-                x = filterXcam3.add(camTvec[1, 0][0]),
+                x = filterYcam3.add(camTvec[0, 0][0]),
+                y = filterXcam3.add(camTvec[1, 0][0]),
                 z = filterZcam3.add(camTvec[2, 0][0])
             ),
             rotation = rotationCam
@@ -192,7 +192,7 @@ class CameraPosition @ExperimentalCoroutinesApi
 
         var c = Cartesian(x, y)
         val p = c.toPolar()
-        p.rotate(marker.position3d.z)
+        p.rotate(marker.rotation.z)
         c = p.toCartesian()
 
         return Camera(

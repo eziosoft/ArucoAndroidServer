@@ -28,13 +28,20 @@ import org.opencv.imgproc.Imgproc
 import kotlin.math.*
 
 
-
 data class Marker2(
     val id: Int = -1,
     val position3d: Position3d,
     val rotation: Rotation,
-    val matrices: Matrices?
+    val matrices: Matrices?,
+    val calculateHeadingFromPixels: Boolean = false
 ) {
+
+    init {
+        if (calculateHeadingFromPixels) {
+            rotation.z = getHeadingFromCorners(matrices?.corners!!)
+        }
+    }
+
     fun getCenterInPixels(corners: Mat): Point {
         var x = 0.0
         var y = 0.0
@@ -78,11 +85,11 @@ data class Marker2(
     }
 
     fun cornersMatToPointArray(corners: Mat): Array<Point> {
-        val markerCornersInPixels = emptyArray<Point>()
+        val markerCornersInPixels = arrayOfNulls<Point>(4)
         for (i in 0..3) {
             markerCornersInPixels[i] = Point(corners[0, i][0], corners[0, i][1])
         }
-        return markerCornersInPixels
+        return markerCornersInPixels as Array<Point>
     }
 
 

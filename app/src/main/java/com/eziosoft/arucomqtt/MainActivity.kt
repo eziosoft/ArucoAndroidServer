@@ -226,7 +226,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                             corners = markerCorners,
                             rvec = rvec,
                             tvec = tvec
-                        )
+                        ),
+                        calculateHeadingFromPixels = true
                     )
 
                     Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
