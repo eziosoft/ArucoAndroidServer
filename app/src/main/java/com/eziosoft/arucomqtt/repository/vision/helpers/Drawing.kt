@@ -58,7 +58,7 @@ fun drawPath(frame: Mat) {
 }
 
 @Suppress("MagicNumber")
-fun drawRobot(frame: Mat, camera: Camera, color: Scalar, headingToTarget: Double? = null) {
+fun drawCameraPosition(frame: Mat, camera: Camera, color: Scalar, headingToTarget: Double? = null) {
     val offsetX: Double = frame.width() / 2.0
     val offsetY: Double = frame.height() / 2.0
 

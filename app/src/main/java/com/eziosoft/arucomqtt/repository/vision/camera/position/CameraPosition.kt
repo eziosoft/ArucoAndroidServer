@@ -107,7 +107,9 @@ class CameraPosition @ExperimentalCoroutinesApi
         Core.gemm(_camR, tvec_conv, 1.0, Mat(), 0.0, camTvec, 0)
 
         val rotationCam = rotationMatrixToEulerAngles(camR)
-        rotationCam.z = rotationCam.z
+        rotationCam.z =
+            rotationCam.z.addAngleRadians(PI_2).mirrorAngleRadians().invertAngleRadians()
+                .normalizeAngle()
 
         val cam = Camera(
             1003,

@@ -57,7 +57,6 @@ import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.aruco.Aruco
 import org.opencv.aruco.DetectorParameters
-import org.opencv.calib3d.Calib3d
 import org.opencv.core.*
 import org.opencv.core.CvType.CV_32FC1
 import org.opencv.imgproc.Imgproc
@@ -287,27 +286,32 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
     }
 
+
+    val TESTING = false
     private fun processMarkers(frame: Mat) {
 
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
             filteredMarker.draw(frame)
 
-            val cam1 = repository.cameraPosition.calculateCameraPosition1(filteredMarker)
-            drawRobot(
-                rgb,
-                cam1,
-                COLOR_RED
-            )
-
             val cam2 = repository.cameraPosition.calculateCameraPosition2(filteredMarker)
-            drawRobot(
-                rgb,
-                cam2,
-                COLOR_PINK
-            )
+
+            if (TESTING) {
+                drawCameraPosition(
+                    rgb,
+                    cam2,
+                    COLOR_PINK
+                )
+
+                val cam1 = repository.cameraPosition.calculateCameraPosition1(filteredMarker)
+                drawCameraPosition(
+                    rgb,
+                    cam1,
+                    COLOR_RED
+                )
+            }
 
             val cam3 = repository.cameraPosition.calculateCameraPosition3(filteredMarker, cam2)
-            drawRobot(
+            drawCameraPosition(
                 rgb,
                 cam3,
                 COLOR_GREEN
@@ -323,7 +327,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                     matrices = null
                 )
             )
-            drawRobot(
+            drawCameraPosition(
                 rgb,
                 cam3,
                 COLOR_GREEN,
