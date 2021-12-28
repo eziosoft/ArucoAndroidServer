@@ -15,7 +15,8 @@
         opencv:layout_constraintEnd_toEndOf="parent"
         opencv:layout_constraintStart_toStartOf="parent"
         opencv:layout_constraintTop_toTopOf="parent"
-        opencv:show_fps="true" />
+        opencv:show_fps="true"
+        />
 
     <TextView
         android:id="@+id/textView"

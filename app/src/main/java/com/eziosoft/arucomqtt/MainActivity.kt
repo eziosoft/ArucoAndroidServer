@@ -37,6 +37,7 @@ import com.eziosoft.arucomqtt.repository.vision.Matrices
 import com.eziosoft.arucomqtt.repository.vision.Position3d
 import com.eziosoft.arucomqtt.repository.vision.Rotation
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
+import com.eziosoft.arucomqtt.repository.vision.camera.CameraHelpers
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_DISTORTION
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_FRONT
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_HEIGH
@@ -57,6 +58,7 @@ import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.aruco.Aruco
 import org.opencv.aruco.DetectorParameters
+import org.opencv.calib3d.Calib3d
 import org.opencv.core.*
 import org.opencv.core.CvType.CV_32FC1
 import org.opencv.imgproc.Imgproc
@@ -109,12 +111,15 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        val camParms = CameraHelpers().getCameraParameters(this)
+        Log.d("aaa", "onCreate: $camParms")
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         with(binding) {
             cameraView.setCameraIndex(CAMERA_FRONT)
-            cameraView.setMaxFrameSize(CAMERA_WIDTH, CAMERA_HEIGH)
+            cameraView.setMaxFrameSize(1000, 1000)
             cameraView.visibility = SurfaceView.VISIBLE
             cameraView.setCvCameraViewListener(this@MainActivity)
         }
@@ -165,28 +170,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
     @Suppress("LongMethod")
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
-
-//        var apeatureWidts = 0.0
-//        var peatureHeight = 0.0
-//        var fovx = doubleArrayOf()
-//        var fovy = doubleArrayOf()
-//        var focalLenght = doubleArrayOf()
-//        var principalPoint = Point(0.0, 0.0)
-//        var aspectRatio = doubleArrayOf()
-//
-//        Calib3d.calibrationMatrixValues(
-//            CAMERA_MATRIX,
-//            Size(inputFrame.gray().width().toDouble(), inputFrame.gray().height().toDouble()),
-//            apeatureWidts,
-//            peatureHeight,
-//            fovx,
-//            fovy,
-//            focalLenght,
-//            principalPoint,
-//            aspectRatio
-//        )
-//
-//        Log.d("aaaa", "onCameraFrame: fovx = $fovx")
 
         if (calibrate) {
             frame = inputFrame.rgba()
