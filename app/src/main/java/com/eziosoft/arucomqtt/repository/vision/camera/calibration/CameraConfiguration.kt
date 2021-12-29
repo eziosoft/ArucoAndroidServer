@@ -48,7 +48,7 @@ class CameraConfiguration {
         const val CAMERA_WIDTH = 1280
         const val CAMERA_HEIGH = 720
 
-        val CAMERA_MATRIX: Mat = Mat(3, 3, CvType.CV_32F)
+        var CAMERA_MATRIX: Mat = Mat(3, 3, CvType.CV_32F)
         val CAMERA_DISTORTION: Mat = Mat(1, 5, CvType.CV_32F)
 
         init {

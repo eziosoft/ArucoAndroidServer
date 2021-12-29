@@ -20,11 +20,13 @@ package com.eziosoft.arucomqtt.repository.vision.camera
 import android.content.Context
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
-import android.util.Log
 import android.util.SizeF
+import org.opencv.core.CvType
+import org.opencv.core.Mat
+import javax.inject.Inject
 import kotlin.math.atan
 
-class CameraHelpers {
+class CameraHelpers @Inject constructor() {
     fun getCameraParameters(context: Context): CameraParameters {
         val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         val cameraCharacteristics =
@@ -41,6 +43,26 @@ class CameraHelpers {
             (2f * atan((sensorSize.height / (focalLength * 2f)).toDouble())) * 180.0 / Math.PI
 
         return CameraParameters(focalLength, sensorSize, horizontalAngle, verticalAngle)
+    }
+
+    fun createCameraMatrix(focalLengthX: Double, focalLengthY: Double, width: Int, height: Int): Mat {
+        val cx = width / 2.0
+        val cy = height / 2.0
+
+        val mat = Mat(3, 3, CvType.CV_32F)
+        mat.put(0, 0, focalLengthX)
+        mat.put(0, 1, 0.0)
+        mat.put(0, 2, cx)
+
+        mat.put(1, 0, 0.0)
+        mat.put(1, 1, focalLengthY)
+        mat.put(1, 2, cy)
+
+        mat.put(2, 0, 0.0)
+        mat.put(2, 1, 0.0)
+        mat.put(2, 2, 1.0)
+
+        return mat
     }
 
     data class CameraParameters(

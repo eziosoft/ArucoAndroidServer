@@ -30,6 +30,7 @@ import androidx.core.view.isVisible
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.helpers.extensions.collectLatestLifecycleFLow
 import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
+import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
 import com.eziosoft.arucomqtt.repository.Repository
 import com.eziosoft.arucomqtt.repository.mqtt.BROKER_URL
 import com.eziosoft.arucomqtt.repository.vision.Marker2
@@ -74,6 +75,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     @Inject
     lateinit var repository: Repository
 
+    @Inject
+    lateinit var cameraHelpers: CameraHelpers
+
     private lateinit var binding: ActivityMainBinding
 
     private var captureCalibrationFrame = false
@@ -111,15 +115,27 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        val camParms = CameraHelpers().getCameraParameters(this)
+        val camParms = cameraHelpers.getCameraParameters(this)
         Log.d("aaa", "onCreate: $camParms")
+
+        val cameraMatrix = cameraHelpers.createCameraMatrix(
+            camParms.focalLength.toDouble(), camParms.focalLength.toDouble(), CAMERA_WIDTH,
+            CAMERA_HEIGH
+        )
+
+
+        cameraMatrix.logMat("camera matrix from API")
+
+        CAMERA_MATRIX= cameraMatrix
+
+
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         with(binding) {
             cameraView.setCameraIndex(CAMERA_FRONT)
-            cameraView.setMaxFrameSize(1000, 1000)
+//            cameraView.setMaxFrameSize(1000, 1000)
             cameraView.visibility = SurfaceView.VISIBLE
             cameraView.setCvCameraViewListener(this@MainActivity)
         }
