@@ -20,17 +20,29 @@ package com.eziosoft.arucomqtt.repository.vision.camera
 import android.content.Context
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
+import android.util.Log
 import android.util.SizeF
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import javax.inject.Inject
+import kotlin.math.PI
 import kotlin.math.atan
+import kotlin.math.tan
 
 class CameraHelpers @Inject constructor() {
-    fun getCameraParameters(context: Context): CameraParameters {
+    fun getCameraParameters(context: Context, cameraID: String): CameraParameters {
         val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         val cameraCharacteristics =
-            cameraManager.getCameraCharacteristics("1") // hardcoded first back camera id
+            cameraManager.getCameraCharacteristics(cameraID) // hardcoded first back camera id
+
+        Log.d(
+            "aaa",
+            "focalLength: ${
+                cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
+                    .contentToString()
+            } "
+        )
+
 
         val focalLength =
             cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
@@ -42,10 +54,24 @@ class CameraHelpers @Inject constructor() {
         val verticalAngle =
             (2f * atan((sensorSize.height / (focalLength * 2f)).toDouble())) * 180.0 / Math.PI
 
+
+
+
         return CameraParameters(focalLength, sensorSize, horizontalAngle, verticalAngle)
     }
 
-    fun createCameraMatrix(focalLengthX: Double, focalLengthY: Double, width: Int, height: Int): Mat {
+    fun focalLength_mmToPx(widthHeightInPixels: Int, viewAngle: Double) =
+        widthHeightInPixels * 0.5 / tan(viewAngle * 0.5 * PI / 180)
+
+    fun focalLengthToMM(cameraParameters: CameraParameters, width: Int): Double =
+        (width / cameraParameters.sensorSize.height * cameraParameters.focalLength).toDouble()
+
+    fun createCameraMatrix(
+        focalLengthX: Double,
+        focalLengthY: Double,
+        width: Int,
+        height: Int
+    ): Mat {
         val cx = width / 2.0
         val cy = height / 2.0
 
