@@ -18,6 +18,7 @@ package com.eziosoft.arucomqtt
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.ImageFormat
 import android.os.Bundle
 import android.util.Log
 import android.view.SurfaceView
@@ -29,17 +30,22 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.helpers.extensions.collectLatestLifecycleFLow
+import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
+import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
 import com.eziosoft.arucomqtt.repository.Repository
 import com.eziosoft.arucomqtt.repository.mqtt.BROKER_URL
-import com.eziosoft.arucomqtt.repository.vision.Marker
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_DISTORTION
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_FRONT
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_HEIGH
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_MATRIX
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_WIDTH
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.DICTIONARY
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.MARKER_LENGTH
+import com.eziosoft.arucomqtt.repository.vision.Marker2
+import com.eziosoft.arucomqtt.repository.vision.Matrices
+import com.eziosoft.arucomqtt.repository.vision.Position3d
+import com.eziosoft.arucomqtt.repository.vision.Rotation
+import com.eziosoft.arucomqtt.repository.vision.camera.Camera
+import com.eziosoft.arucomqtt.repository.vision.camera.CameraHelpers
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_DISTORTION
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_HEIGH
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_MATRIX
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_WIDTH
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.DICTIONARY
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.MARKER_LENGTH
 import com.eziosoft.arucomqtt.repository.vision.helpers.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -68,6 +74,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     @Inject
     lateinit var repository: Repository
 
+    @Inject
+    lateinit var cameraHelpers: CameraHelpers
+
     private lateinit var binding: ActivityMainBinding
 
     private var captureCalibrationFrame = false
@@ -80,7 +89,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val ids = Mat()
     private val allCorners: MutableList<Mat> = ArrayList()
     private val rejected: MutableList<Mat> = ArrayList()
-    private val markersList: MutableList<Marker> = ArrayList()
+    private val markersList: MutableList<Marker2> = ArrayList()
 
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
@@ -105,15 +114,47 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        val cameraID = 1
+
+
+
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         with(binding) {
-            cameraView.setCameraIndex(CAMERA_FRONT)
+            cameraView.setCameraIndex(cameraID)
             cameraView.setMaxFrameSize(CAMERA_WIDTH, CAMERA_HEIGH)
             cameraView.visibility = SurfaceView.VISIBLE
             cameraView.setCvCameraViewListener(this@MainActivity)
         }
+
+
+        val camParms = cameraHelpers.getCameraParameters(this, cameraID.toString())
+        Log.d("aaa", "onCreate: $camParms")
+        camParms.resolutions?.getOutputSizes(ImageFormat.JPEG)?.filter {
+            val ratio = it.width.toDouble() / it.height.toDouble()
+           true
+        }?.map {
+
+            val ratio = it.width.toDouble() / it.height.toDouble()
+            Log.d(TAG, "onCreate: $it  $ratio")
+        }
+
+        val cameraMatrix = cameraHelpers.createCameraMatrix(
+            focalLengthX = cameraHelpers.focalLengthToMM(camParms, CAMERA_WIDTH),
+            focalLengthY = cameraHelpers.focalLengthToMM(camParms, CAMERA_WIDTH),
+            width = CAMERA_WIDTH,
+            height = CAMERA_HEIGH
+        )
+
+
+        cameraMatrix.logMat("camera matrix from API")
+
+        CAMERA_MATRIX = cameraMatrix
+
+
+
 
         setupListeners()
         setUpCollectors()
@@ -161,6 +202,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
     @Suppress("LongMethod")
     override fun onCameraFrame(inputFrame: CvCameraViewFrame): Mat {
+
         if (calibrate) {
             frame = inputFrame.rgba()
             val gray = inputFrame.gray()
@@ -169,7 +211,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             if (captureCalibrationFrame) {
                 captureCalibrationFrame = false
                 repository.cameraCalibrator.addCorners()
-                val calSummary =  repository.cameraCalibrator.calibrate()
+                val calSummary = repository.cameraCalibrator.calibrate()
                 log(calSummary)
             }
             return frame
@@ -211,17 +253,22 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                         tvec
                     )
 
-                    val marker = Marker(
+                    val marker = Marker2(
                         id = id,
-                        x = tvec[0, 0][0],
-                        y = tvec[0, 0][1],
-                        z = tvec[0, 0][2],
-                        corners = markerCorners,
-                        rvec = rvec,
-                        tvec = tvec
+                        Position3d(
+                            x = tvec[0, 0][0],
+                            y = tvec[0, 0][1],
+                            z = tvec[0, 0][2]
+                        ), Rotation(),
+                        Matrices(
+                            corners = markerCorners,
+                            rvec = rvec,
+                            tvec = tvec
+                        ),
+                        calculateHeadingFromPixels = true
                     )
 
-                    // Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
+                    Aruco.drawAxis(rgb, CAMERA_MATRIX, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
                     markersList.add(marker)
                 }
             }
@@ -254,31 +301,32 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         }
     }
 
+
+    val TESTING = true
     private fun processMarkers(frame: Mat) {
-        var cam3 = Marker()
 
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
             filteredMarker.draw(frame)
 
-            val cam1 = repository.cameraPosition.calculateCameraPosition1(filteredMarker)
-            markersList.add(cam1)
-            drawRobot(
-                rgb,
-                cam1,
-                COLOR_RED
-            )
-
             val cam2 = repository.cameraPosition.calculateCameraPosition2(filteredMarker)
-            markersList.add(cam2)
-            drawRobot(
-                rgb,
-                cam2,
-                COLOR_PINK
-            )
 
-            cam3 = repository.cameraPosition.calculateCameraPosition3(filteredMarker)
-            markersList.add(cam3)
-            drawRobot(
+            if (TESTING) {
+                drawCameraPosition(
+                    rgb,
+                    cam2,
+                    COLOR_PINK
+                )
+
+                val cam1 = repository.cameraPosition.calculateCameraPosition1(filteredMarker)
+                drawCameraPosition(
+                    rgb,
+                    cam1,
+                    COLOR_RED
+                )
+            }
+
+            val cam3 = repository.cameraPosition.calculateCameraPosition3(filteredMarker, cam2)
+            drawCameraPosition(
                 rgb,
                 cam3,
                 COLOR_GREEN
@@ -286,16 +334,24 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
             cam3.addToPath(rgb)
             publishCameraLocation(cam3)
-        }
 
-        drawRobot(
-            rgb,
-            cam3,
-            COLOR_GREEN
-        )
+            val headingToTarget = cam3.headingTo(
+                Marker2(
+                    position3d = Position3d(),
+                    rotation = Rotation(),
+                    matrices = null
+                )
+            )
+            drawCameraPosition(
+                rgb,
+                cam3,
+                COLOR_GREEN,
+                headingToTarget.invertAngleRadians()
+            )
+        }
     }
 
-    private fun publishCameraLocation(cam: Marker) {
+    private fun publishCameraLocation(cam: Camera) {
         repository.publishCameraLocation(cam)
     }
 

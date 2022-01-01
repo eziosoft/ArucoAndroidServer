@@ -25,9 +25,8 @@ import com.eziosoft.arucomqtt.repository.map.Map
 import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.arucomqtt.repository.roomba.RoombaSensorParser
-import com.eziosoft.arucomqtt.repository.vision.Marker
+import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration
 import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -168,8 +167,8 @@ class Repository @Inject constructor(
         publishMessage(gson.toJson(map), MQTT_MAP_TOPIC, retain)
     }
 
-    fun publishCameraLocation(marker: Marker) {
-        publishMessage(gson.toJson(marker), MQTT_CAM_LOCATION_TOPIC, false)
+    fun publishCameraLocation(camera: Camera) {
+        publishMessage(gson.toJson(camera), MQTT_CAM_LOCATION_TOPIC, false)
     }
 
     companion object {
