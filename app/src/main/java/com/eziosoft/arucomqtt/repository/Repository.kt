@@ -25,10 +25,8 @@ import com.eziosoft.arucomqtt.repository.map.Map
 import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.arucomqtt.repository.roomba.RoombaSensorParser
-import com.eziosoft.arucomqtt.repository.vision.Marker2
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration
 import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope

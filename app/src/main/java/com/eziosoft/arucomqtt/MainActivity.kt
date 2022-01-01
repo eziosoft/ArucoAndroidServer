@@ -18,6 +18,7 @@ package com.eziosoft.arucomqtt
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.ImageFormat
 import android.os.Bundle
 import android.util.Log
 import android.view.SurfaceView
@@ -39,13 +40,12 @@ import com.eziosoft.arucomqtt.repository.vision.Position3d
 import com.eziosoft.arucomqtt.repository.vision.Rotation
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import com.eziosoft.arucomqtt.repository.vision.camera.CameraHelpers
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_DISTORTION
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_FRONT
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_HEIGH
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_MATRIX
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.CAMERA_WIDTH
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.DICTIONARY
-import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraConfiguration.Companion.MARKER_LENGTH
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_DISTORTION
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_HEIGH
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_MATRIX
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_WIDTH
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.DICTIONARY
+import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.MARKER_LENGTH
 import com.eziosoft.arucomqtt.repository.vision.helpers.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -114,6 +114,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        val cameraID = 1
 
 
 
@@ -122,15 +123,23 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         setContentView(binding.root)
 
         with(binding) {
-            cameraView.setCameraIndex(0)
-//            cameraView.setMaxFrameSize(1000, 1000)
+            cameraView.setCameraIndex(cameraID)
+            cameraView.setMaxFrameSize(CAMERA_WIDTH, CAMERA_HEIGH)
             cameraView.visibility = SurfaceView.VISIBLE
             cameraView.setCvCameraViewListener(this@MainActivity)
         }
 
 
-        val camParms = cameraHelpers.getCameraParameters(this, "0")
+        val camParms = cameraHelpers.getCameraParameters(this, cameraID.toString())
         Log.d("aaa", "onCreate: $camParms")
+        camParms.resolutions?.getOutputSizes(ImageFormat.JPEG)?.filter {
+            val ratio = it.width.toDouble() / it.height.toDouble()
+           true
+        }?.map {
+
+            val ratio = it.width.toDouble() / it.height.toDouble()
+            Log.d(TAG, "onCreate: $it  $ratio")
+        }
 
         val cameraMatrix = cameraHelpers.createCameraMatrix(
             focalLengthX = cameraHelpers.focalLengthToMM(camParms, CAMERA_WIDTH),
@@ -293,7 +302,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
 
-    val TESTING = false
+    val TESTING = true
     private fun processMarkers(frame: Mat) {
 
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0

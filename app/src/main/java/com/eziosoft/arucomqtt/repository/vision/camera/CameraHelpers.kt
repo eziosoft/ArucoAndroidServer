@@ -20,6 +20,7 @@ package com.eziosoft.arucomqtt.repository.vision.camera
 import android.content.Context
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
+import android.hardware.camera2.params.StreamConfigurationMap
 import android.util.Log
 import android.util.SizeF
 import org.opencv.core.CvType
@@ -33,15 +34,7 @@ class CameraHelpers @Inject constructor() {
     fun getCameraParameters(context: Context, cameraID: String): CameraParameters {
         val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         val cameraCharacteristics =
-            cameraManager.getCameraCharacteristics(cameraID) // hardcoded first back camera id
-
-        Log.d(
-            "aaa",
-            "focalLength: ${
-                cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
-                    .contentToString()
-            } "
-        )
+            cameraManager.getCameraCharacteristics(cameraID)
 
 
         val focalLength =
@@ -54,10 +47,12 @@ class CameraHelpers @Inject constructor() {
         val verticalAngle =
             (2f * atan((sensorSize.height / (focalLength * 2f)).toDouble())) * 180.0 / Math.PI
 
+        val resolutions =
+            cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
 
 
 
-        return CameraParameters(focalLength, sensorSize, horizontalAngle, verticalAngle)
+        return CameraParameters(focalLength, sensorSize, horizontalAngle, verticalAngle, resolutions)
     }
 
     fun focalLength_mmToPx(widthHeightInPixels: Int, viewAngle: Double) =
@@ -95,6 +90,7 @@ class CameraHelpers @Inject constructor() {
         val focalLength: Float,
         val sensorSize: SizeF,
         val horizontalAngle: Double,
-        val verticalAngle: Double
+        val verticalAngle: Double,
+        val resolutions:StreamConfigurationMap?
     )
 }
