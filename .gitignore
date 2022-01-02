@@ -13,3 +13,4 @@
 .externalNativeBuild
 app/release/
 /mqttDraw/application.windows/
+/keystore.properties

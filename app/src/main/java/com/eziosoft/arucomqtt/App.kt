@@ -20,6 +20,15 @@ import android.app.Application
 import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
 import org.opencv.android.OpenCVLoader
+import com.microsoft.appcenter.crashes.Crashes
+
+import com.microsoft.appcenter.analytics.Analytics
+
+import dagger.hilt.android.internal.Contexts.getApplication
+
+import com.microsoft.appcenter.AppCenter
+import dagger.hilt.android.internal.Contexts
+
 
 @HiltAndroidApp
 class App : Application() {
@@ -34,5 +43,10 @@ class App : Application() {
                 "OpenCV loaded"
             )
         }
-    }
+
+        AppCenter.start(
+            this, BuildConfig.APPCENTER_APP_SECRET,
+            Analytics::class.java, Crashes::class.java
+        )
+     }
 }
