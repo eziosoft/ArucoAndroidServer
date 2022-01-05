@@ -31,6 +31,7 @@ import androidx.core.view.isVisible
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.helpers.extensions.collectLatestLifecycleFLow
 import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
+import com.eziosoft.arucomqtt.helpers.extensions.toDegree
 import com.eziosoft.arucomqtt.helpers.filters.extensions.logMat
 import com.eziosoft.arucomqtt.repository.Repository
 import com.eziosoft.arucomqtt.repository.mqtt.BROKER_URL
@@ -46,6 +47,7 @@ import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_MA
 import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.CAMERA_WIDTH
 import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.DICTIONARY
 import com.eziosoft.arucomqtt.repository.CameraConfiguration.Companion.MARKER_LENGTH
+import com.eziosoft.arucomqtt.repository.robotControl.RobotControl
 import com.eziosoft.arucomqtt.repository.vision.helpers.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -91,6 +93,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val rejected: MutableList<Mat> = ArrayList()
     private val markersList: MutableList<Marker2> = ArrayList()
 
+    @Inject
+    lateinit var robotControl: RobotControl
+
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
             if (status == SUCCESS) {
@@ -134,7 +139,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         Log.d("aaa", "onCreate: $camParms")
         camParms.resolutions?.getOutputSizes(ImageFormat.JPEG)?.filter {
             val ratio = it.width.toDouble() / it.height.toDouble()
-           true
+            true
         }?.map {
 
             val ratio = it.width.toDouble() / it.height.toDouble()
@@ -304,7 +309,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
     val TESTING = true
     private fun processMarkers(frame: Mat) {
-
+       if(markersList.none { it.id == 0 }) robotControl.robotStop()
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
             filteredMarker.draw(frame)
 
@@ -335,20 +340,34 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             cam3.addToPath(rgb)
             publishCameraLocation(cam3)
 
-            val headingToTarget = cam3.headingTo(
-                Marker2(
-                    position3d = Position3d(),
-                    rotation = Rotation(),
-                    matrices = null
-                )
+
+            val target = Marker2(
+                position3d = Position3d(),
+                rotation = Rotation(),
+                matrices = null
             )
+
+            val headingToTarget = cam3.headingTo(target)
+            val distanceToTarget = cam3.distanceTo(target)
+
             drawCameraPosition(
                 rgb,
                 cam3,
                 COLOR_GREEN,
                 headingToTarget.invertAngleRadians()
             )
+            controlRobot(cam3.rotation.z, headingToTarget.invertAngleRadians(), distanceToTarget)
         }
+    }
+
+
+    private fun controlRobot(
+        currentHeading: Double,
+        headingToTarget: Double,
+        distanceToTarget: Double
+    ) {
+        //robotControl.sendJoystickData(angle = angle,50, false)
+        robotControl.robotNavigation(currentHeading, headingToTarget, distanceToTarget)
     }
 
     private fun publishCameraLocation(cam: Camera) {
@@ -395,6 +414,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     public override fun onPause() {
         super.onPause()
         disableCamera()
+        robotControl.robotStop()
     }
 
     public override fun onDestroy() {
