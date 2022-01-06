@@ -18,6 +18,7 @@ package com.eziosoft.arucomqtt
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.ImageFormat
 import android.os.Bundle
 import android.util.Log
@@ -28,6 +29,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.eziosoft.arucomqtt.databinding.ActivityMainBinding
 import com.eziosoft.arucomqtt.helpers.extensions.collectLatestLifecycleFLow
 import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
@@ -53,6 +55,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame
@@ -170,6 +173,15 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private fun setUpCollectors() {
         collectLatestLifecycleFLow(repository.connectionStatus) {
             repository.publishMap(true)
+        }
+
+        lifecycleScope.launch {
+            repository.sensorFlow.collect { sensorList ->
+                sensorList.filter { it.sensorID == 7 }.forEach {
+                    robotControl.alarm = it.unsignedValue > 0
+                    binding.alarmTV.isVisible = robotControl.alarm
+                }
+            }
         }
     }
 
@@ -307,9 +319,9 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
 
-    val TESTING = true
+    val TESTING = false
     private fun processMarkers(frame: Mat) {
-       if(markersList.none { it.id == 0 }) robotControl.robotStop()
+        if (markersList.none { it.id == 0 }) robotControl.robotStop()
         markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
             filteredMarker.draw(frame)
 
@@ -341,12 +353,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             publishCameraLocation(cam3)
 
 
-            val target = Marker2(
-                position3d = Position3d(),
-                rotation = Rotation(),
-                matrices = null
-            )
-
             val headingToTarget = cam3.headingTo(target)
             val distanceToTarget = cam3.distanceTo(target)
 
@@ -357,10 +363,18 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 headingToTarget.invertAngleRadians()
             )
             controlRobot(cam3.rotation.z, headingToTarget.invertAngleRadians(), distanceToTarget)
+
+            drawTarget(rgb, target, COLOR_WHITE)
         }
     }
 
+    var target = Marker2(
+        position3d = Position3d(),
+        rotation = Rotation(),
+        matrices = null
+    )
 
+    var i = 0.0
     private fun controlRobot(
         currentHeading: Double,
         headingToTarget: Double,
@@ -368,6 +382,16 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     ) {
         //robotControl.sendJoystickData(angle = angle,50, false)
         robotControl.robotNavigation(currentHeading, headingToTarget, distanceToTarget)
+        { targetReached ->
+            if (targetReached) {
+                i += 0.1
+                target = Marker2(
+                    position3d = Position3d(x = 300 * sin(i), y = 300 * cos(i)),
+                    rotation = Rotation(),
+                    matrices = null
+                )
+            }
+        }
     }
 
     private fun publishCameraLocation(cam: Camera) {

@@ -57,6 +57,19 @@ fun drawPath(frame: Mat) {
     }
 }
 
+
+@Suppress("MagicNumber")
+fun drawTarget(frame: Mat, marker: Marker2, color: Scalar) {
+    val offsetX: Double = frame.width() / 2.0
+    val offsetY: Double = frame.height() / 2.0
+
+    val p = Point(
+        marker.position3d.x / SCALE_TO_DRAW + offsetX,
+        marker.position3d.y / SCALE_TO_DRAW + offsetY
+    )
+    Imgproc.circle(frame, p, 10, color, 2)
+}
+
 @Suppress("MagicNumber")
 fun drawCameraPosition(frame: Mat, camera: Camera, color: Scalar, headingToTarget: Double? = null) {
     val offsetX: Double = frame.width() / 2.0

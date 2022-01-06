@@ -15,8 +15,7 @@
         opencv:layout_constraintEnd_toEndOf="parent"
         opencv:layout_constraintStart_toStartOf="parent"
         opencv:layout_constraintTop_toTopOf="parent"
-        opencv:show_fps="true"
-        />
+        opencv:show_fps="true" />
 
     <TextView
         android:id="@+id/textView"
@@ -84,4 +83,20 @@
         android:text="clear map"
         opencv:layout_constraintStart_toStartOf="parent"
         opencv:layout_constraintTop_toBottomOf="@+id/mapB" />
+
+    <TextView
+        android:id="@+id/alarmTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#000"
+        android:text="ALARM"
+        android:textColor="#F00"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        opencv:layout_constraintBottom_toBottomOf="parent"
+        opencv:layout_constraintEnd_toEndOf="parent"
+        opencv:layout_constraintStart_toStartOf="parent"
+        opencv:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="173dp"
+        tools:layout_editor_absoluteY="348dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -147,7 +147,7 @@ class Repository @Inject constructor(
     }
 
     var timer = 0L
-    var reportSensorsInterval = 250
+    var reportSensorsInterval = 1
     private fun processParsedSensors(sensors: List<RoombaParsedSensor>) {
         if (timer < System.currentTimeMillis()) {
             timer = System.currentTimeMillis() + reportSensorsInterval
