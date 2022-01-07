@@ -20,12 +20,13 @@ package com.eziosoft.arucomqtt.repository.robotControl
 import android.util.Log
 import androidx.core.math.MathUtils.clamp
 import androidx.viewbinding.BuildConfig
-import com.eziosoft.arucomqtt.helpers.extensions.PI_2
 import com.eziosoft.arucomqtt.helpers.extensions.TWO_PI
 import com.eziosoft.arucomqtt.helpers.extensions.normalizeAngle
+import com.eziosoft.arucomqtt.helpers.extensions.toDegree
 import com.eziosoft.arucomqtt.repository.pid.MiniPID
 import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import javax.inject.Inject
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -113,14 +114,16 @@ class RobotControl @Inject constructor(private val mqtt: Mqtt) {
         distanceToTarget: Double,
         targetReached: (Boolean) -> Unit
     ) {
-        var currentHeading = currentHeading.normalizeAngle()
-        var headingToTarget = headingToTarget.normalizeAngle()
+        val headingDifference = currentHeading.normalizeAngle() -  headingToTarget.normalizeAngle()
 
+        var headingDiffrenceCorrected = headingDifference
+        if (headingDiffrenceCorrected > PI) headingDiffrenceCorrected -= TWO_PI
+        if (headingDifference < -PI) headingDiffrenceCorrected += TWO_PI
 
-        var headingDifference = currentHeading - headingToTarget
-
-        if (headingDifference > 180) headingDifference -= TWO_PI
-        if (headingDifference < -180) headingDifference += TWO_PI
+        Log.d(
+            "aaa",
+            "robotNavigation: heading = ${currentHeading.toDegree().toInt()}, headingTarget=${headingToTarget.toDegree().toInt()}, diff=${headingDifference.toDegree().toInt()}, diff corr= ${headingDiffrenceCorrected.toDegree().toInt()}"
+        )
 
         pidStearing.setOutputLimits(-1.0, 1.0)
         val stearing = pidStearing.getOutput(headingDifference, 0.0)
@@ -134,16 +137,11 @@ class RobotControl @Inject constructor(private val mqtt: Mqtt) {
 
         if (distanceToTarget < WP_RADIUS) {
 //            sendChannels(0, 0, 0, 0)
-            targetReached(true)
+            targetReached(false)
         } else {
             sendChannels(ch1, ch2, 0, 0)
             targetReached(false)
         }
-        Log.d(
-            "aaa",
-            "robotNavigation:  heading=$currentHeading headingToTarget=$headingToTarget diff=$headingDifference  distance= $distanceToTarget ch1 = $ch1 ch2=$ch2"
-        )
-
     }
 
 
