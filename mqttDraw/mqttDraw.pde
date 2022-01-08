@@ -38,6 +38,13 @@ void draw() {
   }
   endShape();
 
+ //cam path
+  stroke(0, 255, 0, 100);
+  beginShape();
+  for (PVector p : camPath) {
+    vertex(p.x/10, p.y/10);
+  }
+  endShape();
 
   //target
   stroke(255, 255, 255, 255);
@@ -46,16 +53,8 @@ void draw() {
   //cam
   stroke(0, 255, 0, 255);
   circle(cam.x/10, cam.y/10, 10);
-  line(cam.x/10, cam.y/10, (float)(cam.x/10-10*Math.sin(camHeading)), (float)(cam.y/10-10*Math.cos(camHeading)));
+  line(cam.x/10, cam.y/10, (float)(cam.x/10+20*Math.sin(camHeading)), (float)(cam.y/10+20*Math.cos(camHeading)));
   plotHeading(degrees(camHeading));
-
-
-  //cam path
-  beginShape();
-  for (PVector p : camPath) {
-    vertex(p.x/10, p.y/10);
-  }
-  endShape();
 }
 
 void mousePressed() {
