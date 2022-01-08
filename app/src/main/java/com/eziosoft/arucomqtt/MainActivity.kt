@@ -335,8 +335,11 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
     private fun processMarkers(frame: Mat) {
-        if (markersList.none { it.id == 0 }) robotControl.robotStop()
-        markersList.filter { it.id == 0 }.map { filteredMarker ->// draw path of marker 0
+        if (markersList.none { it.id == 0 }) {
+            robotControl.robotStop()
+            return
+        }
+        markersList.filter { it.id == 0 }.forEach { filteredMarker ->// draw path of marker 0
             filteredMarker.draw(frame)
 
             val cam2 = repository.cameraPosition.calculateCameraPosition2(filteredMarker)
