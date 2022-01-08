@@ -47,7 +47,7 @@ class Camera(
 
     fun headingTo(marker: Marker2) =
         atan2(
-            position3d.x - marker.position3d.x,
-            position3d.y - marker.position3d.y
+            marker.position3d.x - position3d.x,
+            marker.position3d.y - position3d.y
         ).normalizeAngle()
 }

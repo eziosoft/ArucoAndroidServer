@@ -18,22 +18,17 @@
 package com.eziosoft.arucomqtt.repository.robotControl
 
 import android.util.Log
-import androidx.core.math.MathUtils.clamp
 import androidx.viewbinding.BuildConfig
-import com.eziosoft.arucomqtt.helpers.extensions.TWO_PI
-import com.eziosoft.arucomqtt.helpers.extensions.normalizeAngle
-import com.eziosoft.arucomqtt.helpers.extensions.toDegree
-import com.eziosoft.arucomqtt.repository.pid.MiniPID
 import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import javax.inject.Inject
-import kotlin.math.PI
+import javax.inject.Singleton
 import kotlin.math.cos
 import kotlin.math.sin
 
+@Singleton
 class RobotControl @Inject constructor(private val mqtt: Mqtt) {
 
     private var timer = 0L
-
     var alarm = false
 
     fun sendJoystickData(angle: Int, strength: Int, precision: Boolean) {
@@ -64,7 +59,7 @@ class RobotControl @Inject constructor(private val mqtt: Mqtt) {
         }
     }
 
-    private fun sendChannels(ch1: Int, ch2: Int, ch3: Int, ch4: Int) {
+    fun sendChannels(ch1: Int, ch2: Int, ch3: Int, ch4: Int) {
 
         val bytes: ByteArray
         if (!alarm) {
@@ -104,50 +99,8 @@ class RobotControl @Inject constructor(private val mqtt: Mqtt) {
         sendChannels(0, 0, 0, 0)
     }
 
-
-    private val pidStearing = MiniPID(0.5, 0.00001, 0.0)
-    private val pidSpeed = MiniPID(0.5, 0.0000, 0.0)
-
-    fun robotNavigation(
-        currentHeading: Double,
-        headingToTarget: Double,
-        distanceToTarget: Double,
-        targetReached: (Boolean) -> Unit
-    ) {
-        val headingDifference = currentHeading.normalizeAngle() -  headingToTarget.normalizeAngle()
-
-        var headingDiffrenceCorrected = headingDifference
-        if (headingDiffrenceCorrected > PI) headingDiffrenceCorrected -= TWO_PI
-        if (headingDifference < -PI) headingDiffrenceCorrected += TWO_PI
-
-        Log.d(
-            "aaa",
-            "robotNavigation: heading = ${currentHeading.toDegree().toInt()}, headingTarget=${headingToTarget.toDegree().toInt()}, diff=${headingDifference.toDegree().toInt()}, diff corr= ${headingDiffrenceCorrected.toDegree().toInt()}"
-        )
-
-        pidStearing.setOutputLimits(-1.0, 1.0)
-        val stearing = pidStearing.getOutput(headingDifference, 0.0)
-        var ch1: Int = (stearing * 100).toInt()
-        ch1 = clamp(ch1, -20, 20)
-
-        pidStearing.setOutputLimits(-1.0, 1.0)
-        val speed = pidSpeed.getOutput(distanceToTarget, 0.0)
-        var ch2: Int = -(speed * 100).toInt()
-        ch2 = clamp(ch2, -20, 20)
-
-        if (distanceToTarget < WP_RADIUS) {
-//            sendChannels(0, 0, 0, 0)
-            targetReached(true)
-        } else {
-            sendChannels(ch1, ch2, 0, 0)
-            targetReached(false)
-        }
-    }
-
-
     companion object {
         const val JOYSTICK_SEND_COMMAND_PERIOD = 200L
-        const val WP_RADIUS = 100
         private const val MAIN_TOPIC = "tank"
         const val MQTT_CONTROL_TOPIC = "$MAIN_TOPIC/in"
         const val MQTT_TELEMETRY_TOPIC = "$MAIN_TOPIC/out"

@@ -23,19 +23,16 @@ package com.eziosoft.arucomqtt.repository
 import android.util.Log
 import com.eziosoft.arucomqtt.repository.map.Map
 import com.eziosoft.arucomqtt.repository.navigation.Target
-import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
-import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.arucomqtt.repository.roomba.RoombaSensorParser
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
 import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
+import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
+import com.eziosoft.arucomqtt.repository.roomba.RoombaParsedSensor
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,22 +44,21 @@ class Repository @Inject constructor(
     val map: Map,
     val cameraPosition: CameraPosition,
     private val gson: Gson
-) :
-    RoombaSensorParser.SensorListener {
+) : RoombaSensorParser.SensorListener {
+
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     val cameraCalibrator = CameraCalibrator(
         CameraConfiguration.CAMERA_WIDTH,
-        CameraConfiguration.CAMERA_HEIGH
+        CameraConfiguration.CAMERA_HEIGHT
     )
 
     private val sensorDataSet = arrayListOf<RoombaParsedSensor>()
-    private val _logFlow = MutableStateFlow<String>("")
-    val logFlow = _logFlow.asStateFlow()
     private val _connectionStatus = MutableStateFlow(ConnectionStatus.DISCONNECTED)
     val connectionStatus = _connectionStatus.asStateFlow()
 
-    private val _sensorsFlow = MutableStateFlow<List<RoombaParsedSensor>>(emptyList())
-    val sensorFlow = _sensorsFlow.asStateFlow()
+    private val _sensorsFlow = MutableSharedFlow<List<RoombaParsedSensor>>()
+    val sensorFlow = _sensorsFlow.asSharedFlow()
 
     val targetFlow =
         MutableStateFlow(Target(0, 0))
@@ -73,12 +69,11 @@ class Repository @Inject constructor(
     }
 
     private fun setupObservers() {
-        CoroutineScope(Dispatchers.IO).launch {
+        coroutineScope.launch {
             mqtt.messageFlow.collect { message ->
                 when (message.topic) {
                     MQTT_TELEMETRY_TOPIC -> {
                         val telemetry = String(message.message)
-                        toLogFlow(telemetry)
                     }
                     MQTT_STREAM_TOPIC -> {
                         val bytes = message.message.toUByteArray()
@@ -102,8 +97,6 @@ class Repository @Inject constructor(
 
 
     fun connectToMQTT(url: String) {
-        toLogFlow("connecting to $url")
-
         if (mqtt.isConnected()) {
             mqtt.disconnectFromBroker { status, error ->
                 setConnectionStatus(status)
@@ -151,27 +144,19 @@ class Repository @Inject constructor(
     override fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean) {
         Log.d("aaa", "onSensors: ")
         if (checksumOK) {
-            processParsedSensors(sensors)
+            coroutineScope.launch {
+                processParsedSensors(sensors)
+            }
         } else {
             Log.e("aaa", "CHECKSUM ERROR")
         }
     }
 
-    var timer = 0L
-    var reportSensorsInterval = 1
-    private fun processParsedSensors(sensors: List<RoombaParsedSensor>) {
-        if (timer < System.currentTimeMillis()) {
-            timer = System.currentTimeMillis() + reportSensorsInterval
-
-            sensorDataSet.clear()
-            sensorDataSet.addAll(sensors)
-            _sensorsFlow.value = sensorDataSet.clone() as List<RoombaParsedSensor>
-            Log.i("aaa", "processParsedSensors: ")
-        }
-    }
-
-    private fun toLogFlow(string: String) {
-        _logFlow.value = string
+    private suspend fun processParsedSensors(sensors: List<RoombaParsedSensor>) {
+        sensorDataSet.clear()
+        sensorDataSet.addAll(sensors)
+        _sensorsFlow.emit(sensorDataSet)
+        Log.i("aaa", "processParsedSensors: ")
     }
 
     fun publishMap(retain: Boolean) {

@@ -15,7 +15,8 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.arucomqtt.repository.pid;
+
+package com.eziosoft.arucomqtt.repository.navigation;
 
 /**
  * Small, easy to use PID implementation with advanced controller capability.<br>
