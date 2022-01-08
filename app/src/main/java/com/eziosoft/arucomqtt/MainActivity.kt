@@ -168,6 +168,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         setUpCollectors()
 
         repository.connectToMQTT(BROKER_URL)
+
+
     }
 
     private fun setUpCollectors() {
@@ -175,12 +177,21 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             repository.publishMap(true)
         }
 
-        lifecycleScope.launch {
+        lifecycleScope.launchWhenStarted {
             repository.sensorFlow.collect { sensorList ->
                 sensorList.filter { it.sensorID == 7 }.forEach {
                     robotControl.alarm = it.unsignedValue > 0
                     binding.alarmTV.isVisible = robotControl.alarm
                 }
+            }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            repository.targetFlow.collect {
+                target = Marker2(
+                    9999, Position3d(it.x.toDouble(), it.y.toDouble(), 0.0),
+                    Rotation(), null
+                )
             }
         }
     }
@@ -291,8 +302,10 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             }
 
             repository.map.draw(rgb, COLOR_RED)
+
             processMarkers(rgb)
             drawCenterLines(rgb)
+            drawTarget(rgb, target, COLOR_WHITE)
 
             cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
             showInfo()
@@ -350,7 +363,6 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             )
 
             cam3.addToPath(rgb)
-            publishCameraLocation(cam3)
 
 
             val headingToTarget = cam3.headingTo(target)
@@ -364,8 +376,12 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             )
             controlRobot(cam3.rotation.z, headingToTarget.invertAngleRadians(), distanceToTarget)
 
-            drawTarget(rgb, target, COLOR_WHITE)
+
+
+            publishCameraLocation(cam3)
         }
+
+
     }
 
     var target = Marker2(
@@ -383,14 +399,14 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         //robotControl.sendJoystickData(angle = angle,50, false)
         robotControl.robotNavigation(currentHeading, headingToTarget, distanceToTarget)
         { targetReached ->
-            if (targetReached) {
-                i += 0.1
-                target = Marker2(
-                    position3d = Position3d(x = 300 * sin(i), y = 300 * cos(i)),
-                    rotation = Rotation(),
-                    matrices = null
-                )
-            }
+//            if (targetReached) {
+//                i += 0.1
+//                target = Marker2(
+//                    position3d = Position3d(x = 300 * sin(i), y = 300 * cos(i)),
+//                    rotation = Rotation(),
+//                    matrices = null
+//                )
+//            }
         }
     }
 

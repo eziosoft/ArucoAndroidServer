@@ -22,6 +22,7 @@ package com.eziosoft.arucomqtt.repository
 
 import android.util.Log
 import com.eziosoft.arucomqtt.repository.map.Map
+import com.eziosoft.arucomqtt.repository.navigation.Target
 import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.arucomqtt.repository.roomba.RoombaSensorParser
@@ -31,6 +32,7 @@ import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
@@ -62,6 +64,9 @@ class Repository @Inject constructor(
     private val _sensorsFlow = MutableStateFlow<List<RoombaParsedSensor>>(emptyList())
     val sensorFlow = _sensorsFlow.asStateFlow()
 
+    val targetFlow =
+        MutableStateFlow(Target(0, 0))
+
     init {
         roombaSensorParser.setListener(this)
         setupObservers()
@@ -80,6 +85,11 @@ class Repository @Inject constructor(
                         if (!bytes.isEmpty()) {
                             roombaSensorParser.parse(bytes)
                         }
+                    }
+                    MQTT_TARGET_LOCATION_TOPIC -> {
+                        val targetJson = String(message.message)
+                        val target = gson.fromJson(targetJson, Target::class.java)
+                        targetFlow.value = target
                     }
                 }
             }
@@ -104,6 +114,7 @@ class Repository @Inject constructor(
             if (status) {
                 mqtt.subscribeToTopic(MQTT_TELEMETRY_TOPIC)
                 mqtt.subscribeToTopic(MQTT_STREAM_TOPIC)
+                mqtt.subscribeToTopic(MQTT_TARGET_LOCATION_TOPIC)
             }
             setConnectionStatus(status)
         }
@@ -178,6 +189,7 @@ class Repository @Inject constructor(
         const val MQTT_STREAM_TOPIC = "$MAIN_TOPIC/stream"
         const val MQTT_MAP_TOPIC = "map"
         const val MQTT_CAM_LOCATION_TOPIC = "cam"
+        const val MQTT_TARGET_LOCATION_TOPIC = "target"
     }
 
     enum class ConnectionStatus {
