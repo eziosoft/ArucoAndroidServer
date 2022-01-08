@@ -18,16 +18,11 @@ package com.eziosoft.arucomqtt
 
 import android.app.Application
 import android.util.Log
+import com.microsoft.appcenter.AppCenter
+import com.microsoft.appcenter.analytics.Analytics
+import com.microsoft.appcenter.crashes.Crashes
 import dagger.hilt.android.HiltAndroidApp
 import org.opencv.android.OpenCVLoader
-import com.microsoft.appcenter.crashes.Crashes
-
-import com.microsoft.appcenter.analytics.Analytics
-
-import dagger.hilt.android.internal.Contexts.getApplication
-
-import com.microsoft.appcenter.AppCenter
-import dagger.hilt.android.internal.Contexts
 
 
 @HiltAndroidApp

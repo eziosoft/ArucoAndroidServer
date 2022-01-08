@@ -15,7 +15,7 @@
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.eziosoft.mqtt_test.repository.mqtt
+package com.eziosoft.arucomqtt.repository.mqtt
 
 
 import android.os.Build

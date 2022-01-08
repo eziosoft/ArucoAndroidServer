@@ -162,8 +162,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         Log.d("aaa", "onCreate: $camParms")
 
         cameraMatrix = cameraHelpers.createCameraMatrix(
-            focalLengthX = cameraHelpers.focalLengthToMM(camParms, CAMERA_WIDTH),
-            focalLengthY = cameraHelpers.focalLengthToMM(camParms, CAMERA_WIDTH),
+            focalLengthX = cameraHelpers.focalLengthToPixels(camParms, CAMERA_WIDTH),
+            focalLengthY = cameraHelpers.focalLengthToPixels(camParms, CAMERA_WIDTH),
             width = CAMERA_WIDTH,
             height = CAMERA_HEIGHT
         )

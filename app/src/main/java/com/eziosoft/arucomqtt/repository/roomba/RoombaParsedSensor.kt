@@ -20,8 +20,6 @@
 
 package com.eziosoft.arucomqtt.repository.roomba
 
-import com.eziosoft.mqtt_test.repository.roomba.RoombaAvailableSensors
-
 data class RoombaParsedSensor @ExperimentalUnsignedTypes constructor(
     val sensorID: Int = 0,
     val b1: UByte = 0u,

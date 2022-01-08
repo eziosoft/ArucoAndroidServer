@@ -21,7 +21,6 @@ import android.content.Context
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.params.StreamConfigurationMap
-import android.util.Log
 import android.util.SizeF
 import org.opencv.core.CvType
 import org.opencv.core.Mat
@@ -43,22 +42,28 @@ class CameraHelpers @Inject constructor() {
         val sensorSize =
             cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE)!!
         val horizontalAngle =
-            (2f * atan((sensorSize.width / (focalLength * 2f)).toDouble())) * 180.0 / Math.PI
+            2f * atan((sensorSize.width / (focalLength * 2f)).toDouble()) * 180.0 / Math.PI
         val verticalAngle =
-            (2f * atan((sensorSize.height / (focalLength * 2f)).toDouble())) * 180.0 / Math.PI
+            2f * atan((sensorSize.height / (focalLength * 2f)).toDouble()) * 180.0 / Math.PI
 
         val resolutions =
             cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
 
 
 
-        return CameraParameters(focalLength, sensorSize, horizontalAngle, verticalAngle, resolutions)
+        return CameraParameters(
+            focalLength,
+            sensorSize,
+            horizontalAngle,
+            verticalAngle,
+            resolutions
+        )
     }
 
-    fun focalLength_mmToPx(widthHeightInPixels: Int, viewAngle: Double) =
+    fun focalLengthToPixels(widthHeightInPixels: Int, viewAngle: Double) =
         widthHeightInPixels * 0.5 / tan(viewAngle * 0.5 * PI / 180)
 
-    fun focalLengthToMM(cameraParameters: CameraParameters, width: Int): Double =
+    fun focalLengthToPixels(cameraParameters: CameraParameters, width: Int): Double =
         (width / cameraParameters.sensorSize.height * cameraParameters.focalLength).toDouble()
 
     fun createCameraMatrix(
@@ -91,6 +96,6 @@ class CameraHelpers @Inject constructor() {
         val sensorSize: SizeF,
         val horizontalAngle: Double,
         val verticalAngle: Double,
-        val resolutions:StreamConfigurationMap?
+        val resolutions: StreamConfigurationMap?
     )
 }

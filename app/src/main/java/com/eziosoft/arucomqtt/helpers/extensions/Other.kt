@@ -17,7 +17,6 @@
 
 package com.eziosoft.arucomqtt.helpers.extensions
 
-import android.app.Activity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle

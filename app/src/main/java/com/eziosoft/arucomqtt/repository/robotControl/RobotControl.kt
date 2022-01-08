@@ -19,7 +19,7 @@ package com.eziosoft.arucomqtt.repository.robotControl
 
 import android.util.Log
 import androidx.viewbinding.BuildConfig
-import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
+import com.eziosoft.arucomqtt.repository.mqtt.Mqtt
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.cos
@@ -75,10 +75,10 @@ class RobotControl @Inject constructor(private val mqtt: Mqtt) {
             bytes =
                 byteArrayOf(
                     '$'.toByte(), 5,
-                    (100).toByte(),
-                    (100).toByte(),
-                    (100).toByte(),
-                    (100).toByte()
+                    100.toByte(),
+                    100.toByte(),
+                    100.toByte(),
+                    100.toByte()
                 )
         }
 

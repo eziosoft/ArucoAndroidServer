@@ -18,7 +18,7 @@
  *
  */
 
-package com.eziosoft.mqtt_test.repository.roomba
+package com.eziosoft.arucomqtt.repository.roomba
 
 class TestSensors {
     //    fun test() {
