@@ -137,7 +137,7 @@ class RobotControl @Inject constructor(private val mqtt: Mqtt) {
 
         if (distanceToTarget < WP_RADIUS) {
 //            sendChannels(0, 0, 0, 0)
-            targetReached(false)
+            targetReached(true)
         } else {
             sendChannels(ch1, ch2, 0, 0)
             targetReached(false)
