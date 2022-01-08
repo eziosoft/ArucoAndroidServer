@@ -23,7 +23,7 @@ import com.eziosoft.arucomqtt.helpers.extensions.*
 import com.eziosoft.arucomqtt.helpers.filters.extensions.rotationMatrixFromEuler
 import com.eziosoft.arucomqtt.helpers.filters.extensions.rotationMatrixToEulerAngles
 import com.eziosoft.arucomqtt.repository.phoneAttitude.DeviceAttitudeProvider
-import com.eziosoft.arucomqtt.repository.vision.Marker2
+import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.Position3d
 import com.eziosoft.arucomqtt.repository.vision.Rotation
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
@@ -87,7 +87,7 @@ class CameraPosition @ExperimentalCoroutinesApi
 
     fun getLastCamera3Position() = cam3
 
-    fun calculateCameraPosition3(marker: Marker2, cam2: Camera): Camera {
+    fun calculateCameraPosition3(marker: Marker, cam2: Camera): Camera {
         val camR = calculateRotationMatrixFromAccAngles(
             currentDeviceAttitude,
             cam2.rotation.z
@@ -130,7 +130,7 @@ class CameraPosition @ExperimentalCoroutinesApi
         return cam
     }
 
-    fun calculateCameraPosition2(marker: Marker2): Camera {
+    fun calculateCameraPosition2(marker: Marker): Camera {
         val R = Mat(3, 3, CvType.CV_32FC1)
         Calib3d.Rodrigues(marker.matrices?.rvec, R)
         val camR = R.t()
@@ -167,7 +167,7 @@ class CameraPosition @ExperimentalCoroutinesApi
         return cam
     }
 
-    fun calculateCameraPosition1(marker: Marker2): Camera {
+    fun calculateCameraPosition1(marker: Marker): Camera {
         val x = marker.position3d.x
         val y = marker.position3d.y
 

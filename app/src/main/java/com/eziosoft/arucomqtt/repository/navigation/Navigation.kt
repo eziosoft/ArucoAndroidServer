@@ -24,7 +24,7 @@ import com.eziosoft.arucomqtt.helpers.extensions.normalizeAngle
 import com.eziosoft.arucomqtt.helpers.extensions.toDegree
 import com.eziosoft.arucomqtt.helpers.extensions.toRadian
 import com.eziosoft.arucomqtt.repository.robotControl.RobotControl
-import com.eziosoft.arucomqtt.repository.vision.Marker2
+import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.Position3d
 import com.eziosoft.arucomqtt.repository.vision.Rotation
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
@@ -41,13 +41,13 @@ class Navigation @Inject constructor(val robotControl: RobotControl) {
     private val pidSpeed =
         MiniPID(0.5, 0.0000, 0.0)
 
-    private var target = Marker2(
+    private var target = Marker(
         position3d = Position3d(),
         rotation = Rotation(),
         matrices = null
     )
 
-    fun setTarget(t: Marker2) {
+    fun setTarget(t: Marker) {
         target = t
     }
 

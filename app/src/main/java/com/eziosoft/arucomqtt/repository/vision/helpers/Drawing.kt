@@ -19,7 +19,7 @@
 package com.eziosoft.arucomqtt.repository.vision.helpers
 
 import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
-import com.eziosoft.arucomqtt.repository.vision.Marker2
+import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
@@ -59,7 +59,7 @@ fun drawPath(frame: Mat) {
 
 
 @Suppress("MagicNumber")
-fun drawTarget(frame: Mat, marker: Marker2, color: Scalar) {
+fun drawTarget(frame: Mat, marker: Marker, color: Scalar) {
     val offsetX: Double = frame.width() / 2.0
     val offsetY: Double = frame.height() / 2.0
 
@@ -80,16 +80,6 @@ fun drawCameraPosition(frame: Mat, camera: Camera, color: Scalar, headingToTarge
         camera.position3d.y / SCALE_TO_DRAW + offsetY
     )
     Imgproc.circle(frame, p, 10, color, 2)
-    Imgproc.line(
-        frame,
-        p,
-        Point(
-            p.x + 50 * sin(camera.rotation.z),
-            p.y + 50 * cos(camera.rotation.z)
-        ),
-        color,
-        3
-    )
 
     if (headingToTarget != null) {
         Imgproc.line(
@@ -104,11 +94,22 @@ fun drawCameraPosition(frame: Mat, camera: Camera, color: Scalar, headingToTarge
         )
     }
 
+    Imgproc.arrowedLine(
+        frame,
+        p,
+        Point(
+            p.x + 50 * sin(camera.rotation.z),
+            p.y + 50 * cos(camera.rotation.z)
+        ),
+        color,
+        3
+    )
+
     Imgproc.putText(frame, camera.id.toString(), p, 1, 2.0, COLOR_WHITE)
 }
 
 // TODO NOT WORKING
-fun drawMarkerOnMap(frame: Mat, marker: Marker2, color: Scalar) {
+fun drawMarkerOnMap(frame: Mat, marker: Marker, color: Scalar) {
     val offsetX: Double = frame.width() / 2.0
     val offsetY: Double = frame.height() / 2.0
 

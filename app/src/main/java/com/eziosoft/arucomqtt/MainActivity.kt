@@ -40,7 +40,7 @@ import com.eziosoft.arucomqtt.repository.Repository
 import com.eziosoft.arucomqtt.repository.mqtt.BROKER_URL
 import com.eziosoft.arucomqtt.repository.navigation.Navigation
 import com.eziosoft.arucomqtt.repository.robotControl.RobotControl
-import com.eziosoft.arucomqtt.repository.vision.Marker2
+import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.Matrices
 import com.eziosoft.arucomqtt.repository.vision.Position3d
 import com.eziosoft.arucomqtt.repository.vision.Rotation
@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     private val detectorParameters = DetectorParameters.create()
     private val allCorners: MutableList<Mat> = ArrayList()
     private val rejected: MutableList<Mat> = ArrayList()
-    private val markersList: MutableList<Marker2> = ArrayList()
+    private val markersList: MutableList<Marker> = ArrayList()
 
     private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
@@ -190,7 +190,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         lifecycleScope.launchWhenStarted {
             repository.targetFlow.collect {
                 navigation.setTarget(
-                    Marker2(
+                    Marker(
                         9999, Position3d(it.x.toDouble(), it.y.toDouble(), 0.0),
                         Rotation(), null
                     )
@@ -283,7 +283,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                     )
                     Aruco.drawAxis(rgb, cameraMatrix, CAMERA_DISTORTION, rvec, tvec, MARKER_LENGTH)
 
-                    val marker = Marker2(
+                    val marker = Marker(
                         id = id,
                         Position3d(
                             x = tvec[0, 0][0],
@@ -301,13 +301,13 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 }
             }
 
-            processMarkers(rgb)
 
-            drawPath(rgb)
-            repository.map.draw(rgb, COLOR_RED)
+
             drawCenterLines(rgb)
+            repository.map.draw(rgb, COLOR_RED)
+            drawPath(rgb)
             drawTarget(rgb, navigation.getTarget(), COLOR_WHITE)
-
+            processMarkers(rgb)
             cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
             showInfo()
         }

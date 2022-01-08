@@ -18,7 +18,7 @@
 package com.eziosoft.arucomqtt.repository.vision.camera
 
 import com.eziosoft.arucomqtt.helpers.extensions.normalizeAngle
-import com.eziosoft.arucomqtt.repository.vision.Marker2
+import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.Position3d
 import com.eziosoft.arucomqtt.repository.vision.Rotation
 import kotlin.math.atan2
@@ -31,7 +31,7 @@ class Camera(
     val rotation: Rotation
 ) {
 
-    fun distanceTo(marker: Marker2): Double {
+    fun distanceTo(marker: Marker): Double {
         return sqrt(
             (position3d.x - marker.position3d.x).pow(2)
                     + (position3d.y - marker.position3d.y).pow(2)
@@ -45,7 +45,7 @@ class Camera(
         )
     }
 
-    fun headingTo(marker: Marker2) =
+    fun headingTo(marker: Marker) =
         atan2(
             marker.position3d.x - position3d.x,
             marker.position3d.y - position3d.y
