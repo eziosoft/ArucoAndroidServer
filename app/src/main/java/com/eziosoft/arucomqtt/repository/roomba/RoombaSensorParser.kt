@@ -21,7 +21,6 @@
 package com.eziosoft.arucomqtt.repository.roomba
 
 import com.eziosoft.mqtt_test.repository.roomba.RoombaAvailableSensors
-import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import kotlinx.coroutines.*
 import javax.inject.Inject
 import javax.inject.Singleton

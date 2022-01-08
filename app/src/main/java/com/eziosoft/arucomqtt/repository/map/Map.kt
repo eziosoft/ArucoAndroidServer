@@ -26,7 +26,9 @@ import org.opencv.core.Point
 import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class Map @Inject constructor(gson: Gson) {
     private var points = mutableListOf<Point>()
 
