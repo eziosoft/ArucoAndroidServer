@@ -51,7 +51,7 @@ class CameraConfiguration {
 //        var CAMERA_MATRIX: Mat = Mat(3, 3, CvType.CV_32F)
         val CAMERA_DISTORTION: Mat = Mat(1, 5, CvType.CV_32F)
 
-//        init {
+        init {
 //            CAMERA_MATRIX.put(0, 0, 1273.417222540211)
 //            CAMERA_MATRIX.put(0, 1, 0.0)
 //            CAMERA_MATRIX.put(0, 2, 640.0)
@@ -63,13 +63,15 @@ class CameraConfiguration {
 //            CAMERA_MATRIX.put(2, 0, 0.0)
 //            CAMERA_MATRIX.put(2, 1, 0.0)
 //            CAMERA_MATRIX.put(2, 2, 1.0)
-//
+
 //            CAMERA_DISTORTION.put(0, 0, 0.1632096059891273)
 //            CAMERA_DISTORTION.put(0, 1, -0.5399431125824645)
-//            CAMERA_DISTORTION.put(0, 2, 0.0)
-//            CAMERA_DISTORTION.put(0, 3, 0.0)
-//            CAMERA_DISTORTION.put(0, 4, 0.0)
-//        }
+            CAMERA_DISTORTION.put(0, 0, 0.0)
+            CAMERA_DISTORTION.put(0, 1, 0.0)
+            CAMERA_DISTORTION.put(0, 2, 0.0)
+            CAMERA_DISTORTION.put(0, 3, 0.0)
+            CAMERA_DISTORTION.put(0, 4, 0.0)
+        }
     }
 }
 //front

@@ -319,7 +319,8 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
                 mat,
                 cameraMatrix,
 //                repository.cameraCalibrator.cameraMatrix,
-                repository.cameraCalibrator.distortionCoefficients
+//                repository.cameraCalibrator.distortionCoefficients
+                CAMERA_DISTORTION
             )
             mat
         } else {
