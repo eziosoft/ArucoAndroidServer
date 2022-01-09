@@ -18,7 +18,6 @@
 
 package com.eziosoft.arucomqtt.repository.vision.helpers
 
-import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
 import com.eziosoft.arucomqtt.repository.navigation.Mission
 import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera

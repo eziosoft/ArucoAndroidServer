@@ -28,11 +28,6 @@ import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.Position3d
 import com.eziosoft.arucomqtt.repository.vision.Rotation
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
-import com.eziosoft.arucomqtt.repository.vision.helpers.*
-import org.opencv.core.Mat
-import org.opencv.core.MatOfPoint
-import org.opencv.core.Point
-import org.opencv.imgproc.Imgproc
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.PI
