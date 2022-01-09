@@ -69,6 +69,7 @@ import javax.inject.Inject
 import kotlin.math.*
 
 
+@ExperimentalUnsignedTypes
 @ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
@@ -171,6 +172,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
 
+    @ExperimentalUnsignedTypes
     private fun setUpCollectors() {
         collectLatestLifecycleFLow(repository.connectionStatus) {
             repository.publishMap(true)
@@ -186,15 +188,11 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             }
         }
 
-        //target set flow
+        //mission set flow
         lifecycleScope.launchWhenStarted {
-            repository.targetFlow.collect {
-                navigation.setTarget(
-                    Marker(
-                        9999, Position3d(it.x.toDouble(), it.y.toDouble(), 0.0),
-                        Rotation(), null
-                    )
-                )
+            repository.targetFlow.collect { mission ->
+                navigation.setMission(mission)
+                navigation.navigate(0)
             }
         }
     }
@@ -306,6 +304,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
             drawCenterLines(rgb)
             repository.map.draw(rgb, COLOR_RED)
             drawPath(rgb)
+            drawMission(rgb, navigation.getMission())
             drawTarget(rgb, navigation.getTarget(), COLOR_WHITE)
             processMarkers(rgb)
             cvtColor(rgb, frame, Imgproc.COLOR_BGR2BGRA) //back to BGRA
@@ -360,24 +359,10 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
     }
 
 
-    var i = 0.0
-    private fun controlRobot(
-        robotLocation: Camera
-    ) {
+    private fun controlRobot(robotLocation: Camera) {
         navigation.robotNavigation(robotLocation)
-        { targetReached ->
-            if (targetReached) {
-                robotControl.robotStop()
-//                i += 0.1
-//                target = Marker2(
-//                    position3d = Position3d(
-//                        x = 250 * sin(i),
-//                        y = 250 * cos(i)
-//                    ),
-//                    rotation = Rotation(),
-//                    matrices = null
-//                )
-            }
+        { wpReached, currentWpId ->
+
         }
     }
 

@@ -19,6 +19,7 @@
 package com.eziosoft.arucomqtt.repository.vision.helpers
 
 import com.eziosoft.arucomqtt.helpers.extensions.invertAngleRadians
+import com.eziosoft.arucomqtt.repository.navigation.Mission
 import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import org.opencv.core.Mat
@@ -108,34 +109,6 @@ fun drawCameraPosition(frame: Mat, camera: Camera, color: Scalar, headingToTarge
     Imgproc.putText(frame, camera.id.toString(), p, 1, 2.0, COLOR_WHITE)
 }
 
-// TODO NOT WORKING
-fun drawMarkerOnMap(frame: Mat, marker: Marker, color: Scalar) {
-    val offsetX: Double = frame.width() / 2.0
-    val offsetY: Double = frame.height() / 2.0
-
-    val p = Point(
-        marker.rotation.x / SCALE_TO_DRAW + offsetX,
-        marker.rotation.y / SCALE_TO_DRAW + offsetY
-    )
-    Imgproc.rectangle(
-        frame,
-        Point(p.x - 10, p.y - 10),
-        Point(p.x + 10, p.y + 10),
-        color,
-        1
-    )
-    Imgproc.line(
-        frame,
-        p,
-        Point(
-            p.x + 10 * sin(-marker.rotation.z.invertAngleRadians()),
-            p.y + 10 * cos(-marker.rotation.z.invertAngleRadians())
-        ),
-        color,
-        2
-    )
-    Imgproc.putText(frame, marker.id.toString(), p, 1, 2.0, color)
-}
 
 fun drawCenterLines(frame: Mat) {
     Imgproc.line(
@@ -152,4 +125,30 @@ fun drawCenterLines(frame: Mat) {
         COLOR_PINK,
         1
     )
+}
+
+fun drawMission(frame: Mat, mission: Mission) {
+    val offsetX: Double = frame.width() / 2.0
+    val offsetY: Double = frame.height() / 2.0
+
+    mission.wpList.forEach {
+        val p = Point(
+            it.x / SCALE_TO_DRAW + offsetX,
+            it.y / SCALE_TO_DRAW + offsetY
+        )
+        Imgproc.circle(frame, p, 10, COLOR_YELLOW, 2)
+    }
+
+
+    val matOfPoint = MatOfPoint()
+    matOfPoint.fromList(mission.wpList.map {
+        Point(
+            it.x.toDouble() / SCALE_TO_DRAW + offsetX,
+            it.y.toDouble() / SCALE_TO_DRAW + offsetY
+        )
+    })
+    val matOfPointList = arrayListOf(matOfPoint)
+    Imgproc.polylines(frame, matOfPointList, false, COLOR_YELLOW, 2)
+
+
 }

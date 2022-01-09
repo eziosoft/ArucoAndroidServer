@@ -22,23 +22,26 @@ package com.eziosoft.arucomqtt.repository
 
 import android.util.Log
 import com.eziosoft.arucomqtt.repository.map.Map
-import com.eziosoft.arucomqtt.repository.navigation.Target
+import com.eziosoft.arucomqtt.repository.mqtt.Mqtt
+import com.eziosoft.arucomqtt.repository.navigation.Mission
+import com.eziosoft.arucomqtt.repository.roomba.RoombaParsedSensor
 import com.eziosoft.arucomqtt.repository.roomba.RoombaSensorParser
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
 import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
-import com.eziosoft.arucomqtt.repository.mqtt.Mqtt
-import com.eziosoft.arucomqtt.repository.roomba.RoombaParsedSensor
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@ExperimentalUnsignedTypes
 @Singleton
-class Repository @Inject constructor(
+class Repository @ExperimentalCoroutinesApi
+@Inject constructor(
     private val mqtt: Mqtt,
     private val roombaSensorParser: RoombaSensorParser,
     val map: Map,
@@ -46,7 +49,7 @@ class Repository @Inject constructor(
     private val gson: Gson
 ) : RoombaSensorParser.SensorListener {
 
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     val cameraCalibrator = CameraCalibrator(
         CameraConfiguration.CAMERA_WIDTH,
@@ -61,13 +64,14 @@ class Repository @Inject constructor(
     val sensorFlow = _sensorsFlow.asSharedFlow()
 
     val targetFlow =
-        MutableStateFlow(Target(0, 0))
+        MutableSharedFlow<Mission>()
 
     init {
         roombaSensorParser.setListener(this)
         setupObservers()
     }
 
+    @ExperimentalUnsignedTypes
     private fun setupObservers() {
         coroutineScope.launch {
             mqtt.messageFlow.collect { message ->
@@ -82,9 +86,11 @@ class Repository @Inject constructor(
                         }
                     }
                     MQTT_TARGET_LOCATION_TOPIC -> {
-                        val targetJson = String(message.message)
-                        val target = gson.fromJson(targetJson, Target::class.java)
-                        targetFlow.value = target
+                        val missionJson = String(message.message)
+                        Log.d("aaa", "MQTT_TARGET_LOCATION_TOPIC:$missionJson ")
+                        val wpPath = gson.fromJson(missionJson, Mission::class.java)
+                        Log.d("aaa", "setupObservers: $wpPath")
+                        targetFlow.emit(wpPath)
                     }
                 }
             }
@@ -133,7 +139,7 @@ class Repository @Inject constructor(
         }
     }
 
-    fun publishMessage(message: String, topic: String, retain: Boolean = false) {
+    private fun publishMessage(message: String, topic: String, retain: Boolean = false) {
         mqtt.publishMessage(message, topic, retain) { _, _ -> }
     }
 

@@ -28,6 +28,11 @@ import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.Position3d
 import com.eziosoft.arucomqtt.repository.vision.Rotation
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
+import com.eziosoft.arucomqtt.repository.vision.helpers.*
+import org.opencv.core.Mat
+import org.opencv.core.MatOfPoint
+import org.opencv.core.Point
+import org.opencv.imgproc.Imgproc
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.PI
@@ -41,26 +46,46 @@ class Navigation @Inject constructor(val robotControl: RobotControl) {
     private val pidSpeed =
         MiniPID(0.5, 0.0000, 0.0)
 
-    private var target = Marker(
+    private var currentWP = Marker(
         position3d = Position3d(),
         rotation = Rotation(),
         matrices = null
     )
 
-    fun setTarget(t: Marker) {
-        target = t
+    private var currentWpID = 0
+
+    private var mission = Mission(listOf(Target(0, 0)))
+
+    fun setMission(m: Mission) {
+        mission = m
     }
 
-    fun getTarget() = target
+    fun getMission() = mission
+
+    fun navigate(wpId: Int) {
+        currentWpID = wpId
+        val wp = mission.wpList[wpId]
+        val t = Marker(
+            9999, Position3d(wp.x.toDouble(), wp.y.toDouble(), 0.0),
+            Rotation(), null
+        )
+        setTarget(t)
+    }
+
+    private fun setTarget(t: Marker) {
+        currentWP = t
+    }
+
+    fun getTarget() = currentWP
 
 
     fun robotNavigation(
         robotLocation: Camera,
-        targetReached: (Boolean) -> Unit
+        targetReached: (wpReached: Boolean, currentWpId: Int) -> Unit
     ) {
         val currentHeading = robotLocation.rotation.z.normalizeAngle()
-        val headingToTarget = robotLocation.headingTo(target)
-        val distanceToTarget = robotLocation.distanceTo(target)
+        val headingToTarget = robotLocation.headingTo(currentWP)
+        val distanceToTarget = robotLocation.distanceTo(currentWP)
         val headingDifference = currentHeading - headingToTarget.normalizeAngle()
 
         var headingDifferenceCorrected = headingDifference
@@ -92,15 +117,35 @@ class Navigation @Inject constructor(val robotControl: RobotControl) {
 
 
         if (distanceToTarget < WP_RADIUS) {
-            targetReached(true)
+            targetReached(true, currentWpID)
+            if (mission.wpList.size - 1 > currentWpID) {
+                currentWpID++
+                navigate(currentWpID)
+            } else {
+                robotControl.robotStop()
+            }
         } else {
             robotControl.sendChannels(ch1, ch2, 0, 0)
-            targetReached(false)
+            targetReached(false, currentWpID)
         }
     }
-
 
     companion object {
         const val WP_RADIUS = 10.0
     }
 }
+
+
+//{"WpList": [{
+//    "x": 300,
+//    "y": 110
+//},
+//    {
+//        "x": 50,
+//        "y": 390
+//    },
+//    {
+//        "x": -10,
+//        "y": 60
+//    }
+//]}

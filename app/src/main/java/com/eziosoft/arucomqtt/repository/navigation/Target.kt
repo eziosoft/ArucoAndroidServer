@@ -17,6 +17,13 @@
 
 package com.eziosoft.arucomqtt.repository.navigation
 
+import com.google.gson.annotations.SerializedName
+
+
+data class Mission(
+    @SerializedName("WpList") val wpList: List<Target>
+)
+
 data class Target(
     val x: Int,
     val y: Int
