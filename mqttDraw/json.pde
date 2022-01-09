@@ -40,8 +40,16 @@ void loadMap(String json) {
 
 void publishTarget(float x, float y)
 {
+  JSONArray path = new JSONArray();
+
+  //for (int i = 0; i < species.length; i++) {
+  JSONObject wp = new JSONObject();
+  wp.setFloat("x", x);
+  wp.setFloat("y", y);
+  path.setJSONObject(0, wp);
+  //}
+
   var json = new JSONObject();
-  json.setFloat("x", x);
-  json.setFloat("y", y);
+  json.setJSONArray("WpList", path);
   client.publish("target", json.toString());
 }
