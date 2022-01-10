@@ -51,6 +51,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.opencv.android.BaseLoaderCallback
@@ -180,7 +182,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
         //roomba sensor flow
         lifecycleScope.launchWhenStarted {
-            repository.sensorFlow.collect { sensorList ->
+            repository.sensorFlow.buffer(10, BufferOverflow.DROP_OLDEST).collect { sensorList ->
                 sensorList.filter { it.sensorID == 7 }.forEach {
                     robotControl.alarm = it.unsignedValue > 0
                     binding.alarmTV.isVisible = robotControl.alarm
