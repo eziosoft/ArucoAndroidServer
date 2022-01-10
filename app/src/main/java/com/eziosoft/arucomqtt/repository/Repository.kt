@@ -30,11 +30,8 @@ import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import com.eziosoft.arucomqtt.repository.vision.camera.calibration.CameraCalibrator
 import com.eziosoft.arucomqtt.repository.vision.camera.position.CameraPosition
 import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -49,7 +46,8 @@ class Repository @ExperimentalCoroutinesApi
     private val gson: Gson
 ) : RoombaSensorParser.SensorListener {
 
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private val job = Job()
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + job)
 
     val cameraCalibrator = CameraCalibrator(
         CameraConfiguration.CAMERA_WIDTH,
@@ -171,6 +169,10 @@ class Repository @ExperimentalCoroutinesApi
 
     fun publishCameraLocation(camera: Camera) {
         publishMessage(gson.toJson(camera), MQTT_CAM_LOCATION_TOPIC, false)
+    }
+
+    fun close() {
+        job.cancel()
     }
 
     companion object {
