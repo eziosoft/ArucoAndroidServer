@@ -126,7 +126,7 @@ class Navigation @Inject constructor(val robotControl: RobotControl) {
     }
 
     companion object {
-        const val WP_RADIUS = 30.0
+        const val WP_RADIUS = 40.0
     }
 }
 
