@@ -135,13 +135,16 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
         setupListeners()
         setUpCollectors()
 
-        repository.connectToMQTT(BROKER_URL)
+        repository.connectToMQTT(BROKER_URL){
+            robotControl.initRoomba()
+        }
     }
 
     public override fun onPause() {
         super.onPause()
         disableCamera()
         robotControl.robotStop()
+        robotControl.endRoomba()
         repository.disconnect()
     }
 

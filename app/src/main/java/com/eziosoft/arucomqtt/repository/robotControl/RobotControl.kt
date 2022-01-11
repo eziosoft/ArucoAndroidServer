@@ -95,6 +95,37 @@ class RobotControl @Inject constructor(private val mqtt: Mqtt) {
         }
     }
 
+    fun sendCommandsChannels(command:ROOMBA_COMMANDS) {
+        sendChannels(0, 0, command.ch3, command.ch4)
+    }
+
+    fun initRoomba()
+    {
+        sendCommandsChannels(ROOMBA_COMMANDS.START)
+        sendCommandsChannels(ROOMBA_COMMANDS.STARTSTREAM)
+    }
+
+    fun endRoomba()
+    {
+        sendCommandsChannels(ROOMBA_COMMANDS.STOPSTREAM)
+        sendCommandsChannels(ROOMBA_COMMANDS.STOP)
+    }
+
+
+
+//    buttonStart.id -> viewModel.sendCommandsChannels(2, 0)
+//    buttonStop.id -> viewModel.sendCommandsChannels(1, 0)
+//    buttonStopBrush.id -> viewModel.sendCommandsChannels(11, 0)
+//    buttonStartBrush.id -> viewModel.sendCommandsChannels(10, 0)
+//    buttonClean.id -> viewModel.sendCommandsChannels(12, 0)
+//    buttonDock.id -> viewModel.sendCommandsChannels(3, 0)
+//    buttonUnDock.id -> viewModel.sendCommandsChannels(4, 0)
+//    buttonPowerOff.id -> viewModel.sendCommandsChannels(5, 0)
+//    buttonStartStream.id -> viewModel.sendCommandsChannels(20, 0)
+//    buttonPauseStream.id -> viewModel.sendCommandsChannels(21, 0)
+
+
+
     fun robotStop() {
         sendChannels(0, 0, 0, 0)
     }
@@ -105,5 +136,18 @@ class RobotControl @Inject constructor(private val mqtt: Mqtt) {
         const val MQTT_CONTROL_TOPIC = "$MAIN_TOPIC/in"
         const val MQTT_TELEMETRY_TOPIC = "$MAIN_TOPIC/out"
         const val MQTT_STREAM_TOPIC = "$MAIN_TOPIC/stream"
+
+        enum class ROOMBA_COMMANDS(val ch3: Int, val ch4: Int) {
+            START(2, 0),
+            STOP(1, 0),
+            START_BRUSH(10, 0),
+            STOP_BRUSH(11, 0),
+            CLEAN(12, 0),
+            DOCK(3, 0),
+            UNDOCK(4, 0),
+            POWEROFF(5, 0),
+            STARTSTREAM(20, 0),
+            STOPSTREAM(21, 0)
+        }
     }
 }

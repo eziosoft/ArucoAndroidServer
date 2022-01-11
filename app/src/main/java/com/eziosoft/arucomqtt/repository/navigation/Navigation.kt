@@ -108,7 +108,7 @@ class Navigation @Inject constructor(val robotControl: RobotControl) {
 
         if (headingDifferenceCorrected.absoluteValue > 45.0.toRadian()) speed = 0.0
         var ch2: Int = -(speed * 100).toInt()
-        ch2 = MathUtils.clamp(ch2, -20, 20)
+        ch2 = MathUtils.clamp(ch2, -30, 30)
 
 
         if (distanceToTarget < WP_RADIUS) {
@@ -126,21 +126,25 @@ class Navigation @Inject constructor(val robotControl: RobotControl) {
     }
 
     companion object {
-        const val WP_RADIUS = 10.0
+        const val WP_RADIUS = 20.0
     }
 }
 
 
 //{"WpList": [{
-//    "x": 300,
-//    "y": 110
+//    "x": 370,
+//    "y": -970
 //},
 //    {
-//        "x": 50,
-//        "y": 390
+//        "x": 560,
+//        "y": 820
 //    },
 //    {
-//        "x": -10,
-//        "y": 60
+//        "x": -300,
+//        "y": 900
+//    },
+//    {
+//        "x": -70,
+//        "y": -820
 //    }
 //]}

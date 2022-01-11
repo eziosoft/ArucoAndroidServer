@@ -59,7 +59,7 @@ class Repository @ExperimentalCoroutinesApi
     val connectionStatus = _connectionStatus.asStateFlow()
 
     private val _sensorsFlow = MutableSharedFlow<List<RoombaParsedSensor>>()
-    val sensorFlow = _sensorsFlow.asSharedFlow()
+    val sensorFlow = _sensorsFlow.asSharedFlow().debounce(50)
 
     val targetFlow =
         MutableSharedFlow<Mission>()
@@ -100,7 +100,7 @@ class Repository @ExperimentalCoroutinesApi
     }
 
 
-    fun connectToMQTT(url: String) {
+    fun connectToMQTT(url: String, connected: (connected: Boolean) -> Unit) {
         if (mqtt.isConnected()) {
             mqtt.disconnectFromBroker { status, error ->
                 setConnectionStatus(status)
@@ -114,6 +114,7 @@ class Repository @ExperimentalCoroutinesApi
                 mqtt.subscribeToTopic(MQTT_TARGET_LOCATION_TOPIC)
             }
             setConnectionStatus(status)
+            connected(status)
         }
     }
 

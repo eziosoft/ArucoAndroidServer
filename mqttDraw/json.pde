@@ -40,6 +40,9 @@ void loadMap(String json) {
 
 void publishTarget(float x, float y)
 {
+  print(x);
+  print(" ");
+  println(y);
   JSONArray path = new JSONArray();
 
   //for (int i = 0; i < species.length; i++) {
