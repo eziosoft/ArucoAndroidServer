@@ -19,6 +19,7 @@
 package com.eziosoft.arucomqtt.repository.vision.helpers
 
 import com.eziosoft.arucomqtt.repository.navigation.Mission
+import com.eziosoft.arucomqtt.repository.navigation.Navigation.Companion.WP_RADIUS
 import com.eziosoft.arucomqtt.repository.vision.Marker
 import com.eziosoft.arucomqtt.repository.vision.camera.Camera
 import org.opencv.core.Mat
@@ -27,8 +28,10 @@ import org.opencv.core.Point
 import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
+const val ROOMBA_SIZE = 300
 const val SCALE_TO_DRAW = 10
 private val path = mutableListOf<Point>() //to draw a path
 
@@ -67,7 +70,7 @@ fun drawTarget(frame: Mat, marker: Marker, color: Scalar) {
         marker.position3d.x / SCALE_TO_DRAW + offsetX,
         marker.position3d.y / SCALE_TO_DRAW + offsetY
     )
-    Imgproc.circle(frame, p, 10, color, 2)
+    Imgproc.circle(frame, p, (WP_RADIUS / SCALE_TO_DRAW / 2.0).roundToInt(), color, 2)
 }
 
 @Suppress("MagicNumber")
@@ -79,7 +82,7 @@ fun drawCameraPosition(frame: Mat, camera: Camera, color: Scalar, headingToTarge
         camera.position3d.x / SCALE_TO_DRAW + offsetX,
         camera.position3d.y / SCALE_TO_DRAW + offsetY
     )
-    Imgproc.circle(frame, p, 10, color, 2)
+    Imgproc.circle(frame, p, (ROOMBA_SIZE / SCALE_TO_DRAW / 2.0).roundToInt(), color, -1)
 
     if (headingToTarget != null) {
         Imgproc.line(
@@ -135,7 +138,7 @@ fun drawMission(frame: Mat, mission: Mission) {
             it.x / SCALE_TO_DRAW + offsetX,
             it.y / SCALE_TO_DRAW + offsetY
         )
-        Imgproc.circle(frame, p, 10, COLOR_YELLOW, 2)
+        Imgproc.circle(frame, p, (WP_RADIUS / SCALE_TO_DRAW / 2.0).toInt(), COLOR_YELLOW, 2)
     }
 
 
@@ -148,6 +151,4 @@ fun drawMission(frame: Mat, mission: Mission) {
     })
     val matOfPointList = arrayListOf(matOfPoint)
     Imgproc.polylines(frame, matOfPointList, false, COLOR_YELLOW, 2)
-
-
 }

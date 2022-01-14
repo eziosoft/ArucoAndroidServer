@@ -306,7 +306,7 @@ class MainActivity : AppCompatActivity(), CvCameraViewListener2 {
 
 
 
-            drawCenterLines(rgb)
+//            drawCenterLines(rgb)
             repository.map.draw(rgb, COLOR_RED)
             drawPath(rgb)
             drawMission(rgb, navigation.getMission())
