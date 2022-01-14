@@ -4,6 +4,8 @@ PVector cam = new PVector(0, 0);
 float camHeading = 0;
 ArrayList<PVector> camPath = new ArrayList<PVector>();
 
+ArrayList<PVector> mission = new ArrayList<PVector>();
+
 
 void loadCam(String json) {
   JSONObject camObject = parseJSONObject(json);
@@ -40,17 +42,18 @@ void loadMap(String json) {
 
 void publishTarget(float x, float y)
 {
-  print(x);
-  print(" ");
-  println(y);
+
+  mission.add(new PVector(x, y));
+  println(mission);
+
   JSONArray path = new JSONArray();
 
-  //for (int i = 0; i < species.length; i++) {
-  JSONObject wp = new JSONObject();
-  wp.setFloat("x", x);
-  wp.setFloat("y", y);
-  path.setJSONObject(0, wp);
-  //}
+  for (int i = 0; i < mission.size(); i++) {
+    JSONObject wp = new JSONObject();
+    wp.setFloat("x", mission.get(i).x);
+    wp.setFloat("y", mission.get(i).y);
+    path.setJSONObject(i, wp);
+  }
 
   var json = new JSONObject();
   json.setJSONArray("WpList", path);

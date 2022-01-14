@@ -5,6 +5,9 @@ MQTTClient client;
 int targetX = 0;
 int targetY = 0;
 
+int ROOMBA_SIZE = 300;
+int WP_SIZE = 100;
+
 void setup() {
   client = new MQTTClient(this);
   client.connect("mqtt://192.168.0.19", "processing");
@@ -38,11 +41,20 @@ void draw() {
   }
   endShape();
 
- //cam path
+  //cam path
   stroke(0, 255, 0, 100);
   beginShape();
   for (PVector p : camPath) {
     vertex(p.x/10, p.y/10);
+  }
+  endShape();
+
+  //mission
+  stroke(255, 255, 0, 100);
+  beginShape();
+  for (PVector p : mission) {
+    vertex(p.x/10, p.y/10);
+    circle(p.x/10, p.y/10, WP_SIZE/10);
   }
   endShape();
 
@@ -52,7 +64,7 @@ void draw() {
 
   //cam
   stroke(0, 255, 0, 255);
-  circle(cam.x/10, cam.y/10, 10);
+  circle(cam.x/10, cam.y/10, ROOMBA_SIZE/10);
   line(cam.x/10, cam.y/10, (float)(cam.x/10+20*Math.sin(camHeading)), (float)(cam.y/10+20*Math.cos(camHeading)));
   plotHeading(degrees(camHeading));
 }
@@ -63,6 +75,11 @@ void mousePressed() {
   publishTarget((mouseX-width/2)*10, (mouseY-height/2)*10);
   targetX = mouseX-width/2;
   targetY = mouseY-height/2;
+}
+
+void keyPressed() {
+  mission.clear();
+  println("mission clear");
 }
 
 void clientConnected() {
